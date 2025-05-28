@@ -49,21 +49,33 @@ class PluginCore {
 			return $post_args;
 		}
 
+		$post_type = $post_args['post_type'];
+
 		foreach ( $relationships as $relationship ) {
 
-			if ( $relationship->from !== $post_args['post_type'] ) {
+			$relationship_from = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
+			$relationship_to   = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+
+			if ( ! in_array( $post_type, $relationship_from, true ) && ! in_array( $post_type, $relationship_to, true ) ) {
 				continue;
 			}
 
-			if ( empty( $relationship->to ) ) {
-				continue;
+			$related_post_types = [];
+
+			if ( in_array( $post_type, $relationship_from, true ) ) {
+				$related_post_types = $relationship_to;
+			} else {
+				$related_post_types = $relationship_from;
 			}
 
-			$post_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+			foreach ( $related_post_types as $related_post_type ) {
 
-			foreach ( $post_types as $post_type ) {
-				$key               = $this->get_field_name( $post_type );
-				$related_posts     = $this->get_related_posts( $post_id, $post_type, $relationship->name );
+				$related_posts = $this->get_related_posts( $post_id, $related_post_type, $relationship->name );
+				if ( empty( $related_posts ) ) {
+					continue;
+				}
+
+				$key               = $this->get_field_name( $related_post_type );
 				$post_args[ $key ] = $related_posts;
 			}
 		}
