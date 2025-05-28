@@ -1,0 +1,23 @@
+{
+  "name": "10up/elasticpress-content-connect",
+  "type": "wordpress-plugin",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "Sérgio Santos",
+      "homepage": "https://s3rgiosan.dev"
+    },
+    {
+      "name": "10up",
+      "email": "info@10up.com"
+    }
+  ],
+  "require": {
+    "php": "^7.4|^8.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "ElasticPressContentConnect\\": "src/"
+    }
+  }
+}
