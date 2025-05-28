@@ -28,7 +28,7 @@ class PluginCore {
 		add_filter( 'ep_post_sync_args', [ $this, 'index_post_to_post_relationships' ], 10, 2 );
 		add_action( 'tenup-content-connect-add-relationship', [ $this, 'index_post_to_post_relationship' ], 10, 4 );
 		add_action( 'tenup-content-connect-delete-relationship', [ $this, 'deindex_post_to_post_relationship' ], 10, 4 );
-		add_filter( 'ep_config_mapping', [ $this, 'map_post_to_post_relationships' ], 10, 2 );
+		add_filter( 'ep_config_mapping', [ $this, 'post_to_post_relationships_mapping' ], 10, 2 );
 	}
 
 	/**
@@ -62,14 +62,9 @@ class PluginCore {
 			$post_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
 			foreach ( $post_types as $post_type ) {
-				$key              = $this->get_field_name( $post_type );
-				$related_post_ids = $this->get_related_posts( $post_id, $post_type, $relationship->name );
-
-				if ( ! empty( $related_post_ids ) ) {
-					$related_post_ids = array_map( 'absint', $related_post_ids );
-				}
-
-				$post_args[ $key ] = $related_post_ids;
+				$key               = $this->get_field_name( $post_type );
+				$related_posts     = $this->get_related_posts( $post_id, $post_type, $relationship->name );
+				$post_args[ $key ] = $related_posts;
 			}
 		}
 
@@ -93,16 +88,16 @@ class PluginCore {
 			return;
 		}
 
-		$relationships = $this->prepare_post_to_post_relationships( $pid1, $pid2 );
+		$relationship = $this->prepare_post_to_post_relationship( $pid1, $pid2 );
 
-		if ( empty( $relationships ) ) {
+		if ( empty( $relationship ) ) {
 			return;
 		}
 
 		$index_name = Indexables::factory()->get( 'post' )->get_index_name();
 
 		$bulk_body = '';
-		foreach ( $relationships as $source_id => $relationship ) {
+		foreach ( $relationship as $source_id => $params ) {
 
 			$bulk_body .= wp_json_encode(
 				[
@@ -115,11 +110,8 @@ class PluginCore {
 			$bulk_body .= wp_json_encode(
 				[
 					'script' => [
-						'source' => 'if (!ctx._source.containsKey(params.field)) { ctx._source[params.field] = [params.value]; } else if (!ctx._source[params.field].contains(params.value)) { ctx._source[params.field].add(params.value); }',
-						'params' => [
-							'field' => $relationship['field_name'],
-							'value' => $relationship['field_value'],
-						],
+						'source' => 'if (!ctx._source.containsKey(params.field)) { ctx._source[params.field] = [params.value]; } else { boolean exists = false; for (item in ctx._source[params.field]) { if (item.post_id == params.value.post_id) { exists = true; break; } } if (!exists) { ctx._source[params.field].add(params.value); } }',
+						'params' => $params,
 					],
 				]
 			) . "\n";
@@ -155,16 +147,16 @@ class PluginCore {
 			return;
 		}
 
-		$relationships = $this->prepare_post_to_post_relationships( $pid1, $pid2 );
+		$relationship = $this->prepare_post_to_post_relationship( $pid1, $pid2 );
 
-		if ( empty( $relationships ) ) {
+		if ( empty( $relationship ) ) {
 			return;
 		}
 
 		$index_name = Indexables::factory()->get( 'post' )->get_index_name();
 
 		$bulk_body = '';
-		foreach ( $relationships as $source_id => $relationship ) {
+		foreach ( $relationship as $source_id => $params ) {
 
 			$bulk_body .= wp_json_encode(
 				[
@@ -177,11 +169,8 @@ class PluginCore {
 			$bulk_body .= wp_json_encode(
 				[
 					'script' => [
-						'source' => 'if (ctx._source.containsKey(params.field) && ctx._source[params.field].contains(params.value)) { ctx._source[params.field].removeAll(Collections.singleton(params.value)); if (ctx._source[params.field].isEmpty()) { ctx._source.remove(params.field); } }',
-						'params' => [
-							'field' => $relationship['field_name'],
-							'value' => $relationship['field_value'],
-						],
+						'source' => 'if (ctx._source.containsKey(params.field)) { ctx._source[params.field].removeIf(item -> item.post_id == params.value.post_id); if (ctx._source[params.field].isEmpty()) { ctx._source.remove(params.field); } }',
+						'params' => $params,
 					],
 				]
 			) . "\n";
@@ -201,16 +190,16 @@ class PluginCore {
 	}
 
 	/**
-	 * Prepares post-to-post relationships for Elasticsearch operations.
+	 * Prepares a post-to-post relationship for Elasticsearch operations.
 	 *
 	 * Creates a data structure representing both sides of the relationship
 	 * with the appropriate field names and values.
 	 *
 	 * @param  int $pid1 The ID of the first post in the relationship.
 	 * @param  int $pid2 The ID of the second post in the relationship.
-	 * @return array An array of relationships keyed by post ID, each containing field_name and field_value.
+	 * @return array An associative array representing the relationship between the two posts.
 	 */
-	public function prepare_post_to_post_relationships( $pid1, $pid2 ) {
+	public function prepare_post_to_post_relationship( $pid1, $pid2 ) {
 
 		$first_post  = get_post( $pid1 );
 		$second_post = get_post( $pid2 );
@@ -219,18 +208,30 @@ class PluginCore {
 			return [];
 		}
 
-		$relationships = [
+		$relationship = [
 			$pid1 => [
-				'field_name'  => $this->get_field_name( $second_post->post_type ),
-				'field_value' => $second_post->ID,
+				'field' => $this->get_field_name( $second_post->post_type ),
+				'value' => $this->get_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field_name'  => $this->get_field_name( $first_post->post_type ),
-				'field_value' => $first_post->ID,
+				'field' => $this->get_field_name( $first_post->post_type ),
+				'value' => $this->get_field_value( $first_post ),
 			],
 		];
 
-		return $relationships;
+		/**
+		 * Filter the post-to-post relationship data.
+		 *
+		 * Allows modification of the relationship structure before indexing.
+		 *
+		 * @param  array    $relationship The relationship data between the two posts.
+		 * @param  \WP_Post $first_post   The first post in the relationship.
+		 * @param  \WP_Post $second_post  The second post in the relationship.
+		 * @return array The modified relationship data.
+		 */
+		$relationship = apply_filters( 'ep_content_connect_post_to_post_relationship', $relationship, $first_post, $second_post );
+
+		return $relationship;
 	}
 
 	/**
@@ -243,7 +244,7 @@ class PluginCore {
 	 * @param  string $index_name Name of the index being mapped.
 	 * @return array Updated mapping with relationship fields included.
 	 */
-	public function map_post_to_post_relationships( $mapping, $index_name ) {
+	public function post_to_post_relationships_mapping( $mapping, $index_name ) {
 
 		if ( Indexables::factory()->get( 'post' )->get_index_name() !== $index_name ) {
 			return $mapping;
@@ -255,16 +256,41 @@ class PluginCore {
 			return $mapping;
 		}
 
-		foreach ( $relationship_keys as $key ) {
-
-			$map = [
-				'type'   => 'text',
-				'fields' => [
-					'raw' => [
-						'type' => 'keyword',
+		$map = [
+			'type'       => 'nested',
+			'properties' => [
+				'post_id'    => [ 'type' => 'integer' ],
+				'post_title' => [
+					'type'   => 'text',
+					'fields' => [
+						'raw' => [ 'type' => 'keyword' ],
 					],
 				],
-			];
+				'post_name'  => [ 'type' => 'keyword' ],
+			],
+		];
+
+		/**
+		 * Filter the mapping for post-to-post relationships.
+		 *
+		 * Allows customization of the mapping structure for related posts.
+		 *
+		 * @param  array  $map        The mapping structure for post-to-post relationships.
+		 * @param  string $index_name The name of the index being mapped.
+		 * @return array The modified mapping structure.
+		 */
+		$map = apply_filters( 'ep_content_connect_post_to_post_relationship_mapping', $map, $index_name );
+
+		foreach ( $relationship_keys as $key ) {
+
+			/**
+			 * Filter the mapping for a specific post-to-post relationship.
+			 *
+			 * @param  array  $map        The mapping structure for the specific relationship key.
+			 * @param  string $index_name The name of the index being mapped.
+			 * @return array The modified mapping structure for the specific key.
+			 */
+			$map = apply_filters( 'ep_content_connect_post_to_post_relationship_mapping_' . $key, $map, $index_name );
 
 			$mapping['mappings']['properties'][ $key ] = $map;
 		}
@@ -319,8 +345,6 @@ class PluginCore {
 	/**
 	 * Gets the prefix for relationship field names.
 	 *
-	 * This prefix distinguishes relationship fields from other fields in the Elasticsearch index.
-	 *
 	 * @return string The prefix string used for relationship field names.
 	 */
 	public function get_field_prefix() {
@@ -337,13 +361,10 @@ class PluginCore {
 	}
 
 	/**
-	 * Generates the Elasticsearch field name for a given post type relationship.
-	 *
-	 * Creates a standardized field name by combining the relationship prefix with
-	 * a sanitized version of the post type.
+	 * Generates the Elasticsearch field name for a given post type.
 	 *
 	 * @param  string $post_type The post type to generate a field name for.
-	 * @return string Elasticsearch field name for the post type relationship.
+	 * @return string Elasticsearch field name for the post type.
 	 */
 	public function get_field_name( $post_type ) {
 
@@ -359,6 +380,36 @@ class PluginCore {
 		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $post_type );
 
 		return $field_name;
+	}
+
+	/**
+	 * Retrieves the Elasticsearch field value for a given post.
+	 *
+	 * @param  \WP_Post $post The post object to retrieve the field value for.
+	 * @return array Elasticsearch field value for the post.
+	 */
+	public function get_field_value( $post ) {
+
+		if ( ! $post instanceof \WP_Post ) {
+			return [];
+		}
+
+		$field_value = [
+			'post_id'    => (int) $post->ID,
+			'post_title' => $post->post_title,
+			'post_name'  => $post->post_name,
+		];
+
+		/**
+		 * Filter the field value for a post.
+		 *
+		 * @param  array    $field_value The field value for the post.
+		 * @param  \WP_Post $post        The post object being processed.
+		 * @return array The modified field value.
+		 */
+		$field_value = apply_filters( 'ep_content_connect_field_value', $field_value, $post );
+
+		return $field_value;
 	}
 
 	/**
@@ -395,7 +446,6 @@ class PluginCore {
 	public function get_related_posts( $post_id, $post_type, $relationship_name ) {
 
 		$query_args = [
-			'fields'                 => 'ids',
 			'post_type'              => $post_type,
 			'posts_per_page'         => 100,
 			'relationship_query'     => [
@@ -421,6 +471,23 @@ class PluginCore {
 
 		$queried_posts = $query->get_posts();
 
-		return $queried_posts;
+		$related_posts = [];
+
+		foreach ( $queried_posts as $related_post ) {
+			$related_posts[] = $this->get_field_value( $related_post );
+		}
+
+		/**
+		 * Filter the related posts retrieved from the query.
+		 *
+		 * Allows modification of the related posts array before returning.
+		 *
+		 * @param  array $related_posts The array of related posts.
+		 * @param  array $queried_posts The original queried posts.
+		 * @return array The modified array of related posts.
+		 */
+		$related_posts = apply_filters( 'ep_content_connect_related_posts', $related_posts, $queried_posts );
+
+		return $related_posts;
 	}
 }
