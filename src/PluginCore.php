@@ -341,8 +341,6 @@ class PluginCore {
 			}
 		}
 
-		$keys = array_unique( $keys );
-
 		/**
 		 * Filter the post-to-post relationship keys.
 		 *
@@ -350,6 +348,8 @@ class PluginCore {
 		 * @return array The modified array of keys.
 		 */
 		$keys = apply_filters( 'ep_content_connect_post_to_post_relationship_keys', $keys );
+
+		$keys = array_unique( $keys );
 
 		return $keys;
 	}
