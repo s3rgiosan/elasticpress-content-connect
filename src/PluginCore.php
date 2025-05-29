@@ -139,7 +139,7 @@ class PluginCore {
 			],
 		];
 
-		Elasticsearch::factory()->remote_request( $path, $args, [], 'post' );
+		$this->remote_request( $path, $args );
 	}
 
 	/**
@@ -198,7 +198,7 @@ class PluginCore {
 			],
 		];
 
-		Elasticsearch::factory()->remote_request( $path, $args, [], 'post' );
+		$this->remote_request( $path, $args );
 	}
 
 	/**
@@ -501,5 +501,19 @@ class PluginCore {
 		$related_posts = apply_filters( 'ep_content_connect_related_posts', $related_posts, $queried_posts );
 
 		return $related_posts;
+	}
+
+	/**
+	 * Sends a remote request to Elasticsearch.
+	 *
+	 * @param  string $path       Site URL to retrieve.
+	 * @param  array  $args       Request arguments.
+	 * @param  array  $query_args Optional. The query args originally passed to WP_Query.
+	 * @param  string $type       Type of request.
+	 * @return \WP_Error|array The response or WP_Error on failure.
+	 */
+	public function remote_request( $path, $args, $query_args = [], $type = 'post' ) {
+		$response = Elasticsearch::factory()->remote_request( $path, $args, $query_args, $type );
+		return $response;
 	}
 }
