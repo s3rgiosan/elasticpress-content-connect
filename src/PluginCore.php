@@ -278,7 +278,7 @@ class PluginCore {
 						'raw' => [ 'type' => 'keyword' ],
 					],
 				],
-				'post_name'  => [ 'type' => 'keyword' ],
+				'post_type'  => [ 'type' => 'keyword' ],
 			],
 		];
 
