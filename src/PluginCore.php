@@ -20,6 +20,13 @@ use function TenUp\ContentConnect\Helpers\get_registry;
 class PluginCore {
 
 	/**
+	 * Array of post-to-post relationships.
+	 *
+	 * @var array
+	 */
+	public $post_to_post_relationships = [];
+
+	/**
 	 * Default setup routine.
 	 *
 	 * @return void
@@ -427,21 +434,23 @@ class PluginCore {
 	/**
 	 * Retrieves all registered post-to-post relationships.
 	 *
-	 * @return array Array of post-to-post relationship objects.
+	 * @return array Array of post-to-post relationships.
 	 */
 	public function get_post_to_post_relationships() {
 
-		$relationships = get_registry()->get_post_to_post_relationships();
+		if ( empty( $this->post_to_post_relationships ) ) {
+			$this->post_to_post_relationships = get_registry()->get_post_to_post_relationships();
 
-		/**
-		 * Filter the post-to-post relationships.
-		 *
-		 * @param  array $relationships The array of post-to-post relationships.
-		 * @return array The modified array of post-to-post relationships.
-		 */
-		$relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $relationships );
+			/**
+			 * Filter the post-to-post relationships.
+			 *
+			 * @param  array $relationships The array of post-to-post relationships.
+			 * @return array The modified array of post-to-post relationships.
+			 */
+			$this->post_to_post_relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $this->post_to_post_relationships );
+		}
 
-		return $relationships;
+		return $this->post_to_post_relationships;
 	}
 
 	/**
