@@ -409,7 +409,6 @@ class PluginCore {
 		$field_value = [
 			'post_id'    => (int) $post->ID,
 			'post_title' => $post->post_title,
-			'post_name'  => $post->post_name,
 			'post_type'  => $post->post_type,
 		];
 
