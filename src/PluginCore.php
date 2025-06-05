@@ -299,10 +299,11 @@ class PluginCore {
 		/**
 		 * Filter the post-to-post relationship keys.
 		 *
-		 * @param  array $keys The array of keys for post-to-post relationships.
+		 * @param  array $keys          The array of keys for post-to-post relationships.
+		 * @param  array $relationships The array of post-to-post relationships.
 		 * @return array The modified array of keys.
 		 */
-		$keys = apply_filters( 'ep_content_connect_post_to_post_relationship_keys', $keys );
+		$keys = apply_filters( 'ep_content_connect_post_to_post_relationship_keys', $keys, $relationships );
 
 		$keys = array_unique( $keys );
 
