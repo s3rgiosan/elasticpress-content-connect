@@ -4,12 +4,12 @@
   "license": "GPL-2.0-or-later",
   "authors": [
     {
-      "name": "Sérgio Santos",
-      "homepage": "https://s3rgiosan.dev"
-    },
-    {
       "name": "10up",
       "email": "info@10up.com"
+    },
+    {
+      "name": "Sérgio Santos",
+      "homepage": "https://s3rgiosan.dev"
     }
   ],
   "require": {
