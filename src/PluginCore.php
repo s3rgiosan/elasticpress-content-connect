@@ -50,34 +50,27 @@ class PluginCore {
 	 */
 	public function index_post_to_post_relationships( $post_args, $post_id ) {
 
+		if ( ! isset( $post_args['post_type'] ) ) {
+			return $post_args;
+		}
+
 		$relationships = $this->get_post_to_post_relationships();
 
 		if ( empty( $relationships ) ) {
 			return $post_args;
 		}
 
-		$post_type = $post_args['post_type'];
+		$post_type          = $post_args['post_type'];
+		$related_post_types = $this->get_related_post_types( $post_type );
 
-		foreach ( $relationships as $relationship ) {
+		if ( empty( $related_post_types ) ) {
+			return $post_args;
+		}
 
-			$relationship_from = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
-			$relationship_to   = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+		foreach ( $related_post_types as $relationship_name => $relationship_post_types ) {
+			foreach ( $relationship_post_types as $related_post_type ) {
 
-			if ( ! in_array( $post_type, $relationship_from, true ) && ! in_array( $post_type, $relationship_to, true ) ) {
-				continue;
-			}
-
-			$related_post_types = [];
-
-			if ( in_array( $post_type, $relationship_from, true ) ) {
-				$related_post_types = $relationship_to;
-			} else {
-				$related_post_types = $relationship_from;
-			}
-
-			foreach ( $related_post_types as $related_post_type ) {
-
-				$related_posts = $this->get_related_posts( $post_id, $related_post_type, $relationship->name );
+				$related_posts = $this->get_related_posts( $post_id, $related_post_type, $relationship_name );
 				if ( empty( $related_posts ) ) {
 					continue;
 				}
@@ -451,6 +444,57 @@ class PluginCore {
 		}
 
 		return $this->post_to_post_relationships;
+	}
+
+	/**
+	 * Retrieves related post types for a given post type.
+	 *
+	 * Analyzes registered post-to-post relationships to find all related post types
+	 * that are connected to the specified post type.
+	 *
+	 * @param  string $post_type The post type to find related post types for.
+	 * @return array Array of related post types, keyed by relationship name.
+	 */
+	protected function get_related_post_types( $post_type ) {
+
+		$relationships = $this->get_post_to_post_relationships();
+
+		if ( empty( $relationships ) ) {
+			return [];
+		}
+
+		$related_post_types = [];
+
+		foreach ( $relationships as $relationship ) {
+			$relationship_from = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
+			$relationship_to   = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+
+			if ( ! in_array( $post_type, $relationship_from, true ) && ! in_array( $post_type, $relationship_to, true ) ) {
+				continue;
+			}
+
+			$relationship_post_types = $relationship_from;
+			if ( in_array( $post_type, $relationship_from, true ) ) {
+				$relationship_post_types = $relationship_to;
+			}
+
+			foreach ( $relationship_post_types as $relationship_post_type ) {
+				$related_post_types[ $relationship->name ][] = $relationship_post_type;
+			}
+		}
+
+		/*
+		 * Filter the related post types for a specific post type.
+		 *
+		 * Allows modification of the related post types array before returning.
+		 *
+		 * @param  array  $related_post_types The array of related post types.
+		 * @param  string $post_type          The post type for which related post types are being retrieved.
+		 * @return array The modified array of related post types.
+		 */
+		$related_post_types = apply_filters( 'ep_content_connect_related_post_types', $related_post_types, $post_type );
+
+		return $related_post_types;
 	}
 
 	/**
