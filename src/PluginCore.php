@@ -209,51 +209,6 @@ class PluginCore {
 	}
 
 	/**
-	 * Prepares a post-to-post relationship for Elasticsearch operations.
-	 *
-	 * Creates a data structure representing both sides of the relationship
-	 * with the appropriate field names and values.
-	 *
-	 * @param  int $pid1 The ID of the first post in the relationship.
-	 * @param  int $pid2 The ID of the second post in the relationship.
-	 * @return array An associative array representing the relationship between the two posts.
-	 */
-	public function prepare_post_to_post_relationship( $pid1, $pid2 ) {
-
-		$first_post  = get_post( $pid1 );
-		$second_post = get_post( $pid2 );
-
-		if ( ! $first_post instanceof \WP_Post || ! $second_post instanceof \WP_Post ) {
-			return [];
-		}
-
-		$relationship = [
-			$pid1 => [
-				'field' => $this->get_field_name( $second_post->post_type ),
-				'value' => $this->get_field_value( $second_post ),
-			],
-			$pid2 => [
-				'field' => $this->get_field_name( $first_post->post_type ),
-				'value' => $this->get_field_value( $first_post ),
-			],
-		];
-
-		/**
-		 * Filter the post-to-post relationship data.
-		 *
-		 * Allows modification of the relationship structure before indexing.
-		 *
-		 * @param  array    $relationship The relationship data between the two posts.
-		 * @param  \WP_Post $first_post   The first post in the relationship.
-		 * @param  \WP_Post $second_post  The second post in the relationship.
-		 * @return array The modified relationship data.
-		 */
-		$relationship = apply_filters( 'ep_content_connect_post_to_post_relationship', $relationship, $first_post, $second_post );
-
-		return $relationship;
-	}
-
-	/**
 	 * Adds post-to-post relationship fields to the Elasticsearch mapping.
 	 *
 	 * Ensures that related post fields are properly defined in the index
@@ -325,7 +280,7 @@ class PluginCore {
 	 *
 	 * @return array Array of unique field keys for post-to-post relationships.
 	 */
-	public function get_post_to_post_relationship_keys() {
+	protected function get_post_to_post_relationship_keys() {
 
 		$relationships = $this->get_post_to_post_relationships();
 
@@ -362,11 +317,56 @@ class PluginCore {
 	}
 
 	/**
+	 * Prepares a post-to-post relationship for Elasticsearch operations.
+	 *
+	 * Creates a data structure representing both sides of the relationship
+	 * with the appropriate field names and values.
+	 *
+	 * @param  int $pid1 The ID of the first post in the relationship.
+	 * @param  int $pid2 The ID of the second post in the relationship.
+	 * @return array An associative array representing the relationship between the two posts.
+	 */
+	protected function prepare_post_to_post_relationship( $pid1, $pid2 ) {
+
+		$first_post  = get_post( $pid1 );
+		$second_post = get_post( $pid2 );
+
+		if ( ! $first_post instanceof \WP_Post || ! $second_post instanceof \WP_Post ) {
+			return [];
+		}
+
+		$relationship = [
+			$pid1 => [
+				'field' => $this->get_field_name( $second_post->post_type ),
+				'value' => $this->get_field_value( $second_post ),
+			],
+			$pid2 => [
+				'field' => $this->get_field_name( $first_post->post_type ),
+				'value' => $this->get_field_value( $first_post ),
+			],
+		];
+
+		/**
+		 * Filter the post-to-post relationship data.
+		 *
+		 * Allows modification of the relationship structure before indexing.
+		 *
+		 * @param  array    $relationship The relationship data between the two posts.
+		 * @param  \WP_Post $first_post   The first post in the relationship.
+		 * @param  \WP_Post $second_post  The second post in the relationship.
+		 * @return array The modified relationship data.
+		 */
+		$relationship = apply_filters( 'ep_content_connect_post_to_post_relationship', $relationship, $first_post, $second_post );
+
+		return $relationship;
+	}
+
+	/**
 	 * Gets the prefix for relationship field names.
 	 *
 	 * @return string The prefix string used for relationship field names.
 	 */
-	public function get_field_prefix() {
+	protected function get_field_prefix() {
 
 		/**
 		 * Filter the prefix used for relationship field names.
@@ -385,7 +385,7 @@ class PluginCore {
 	 * @param  string $post_type The post type to generate a field name for.
 	 * @return string Elasticsearch field name for the post type.
 	 */
-	public function get_field_name( $post_type ) {
+	protected function get_field_name( $post_type ) {
 
 		$field_name = sprintf( '%s%s', $this->get_field_prefix(), str_replace( '-', '_', $post_type ) );
 
@@ -407,7 +407,7 @@ class PluginCore {
 	 * @param  \WP_Post $post The post object to retrieve the field value for.
 	 * @return array Elasticsearch field value for the post.
 	 */
-	public function get_field_value( $post ) {
+	protected function get_field_value( $post ) {
 
 		if ( ! $post instanceof \WP_Post ) {
 			return [];
@@ -436,7 +436,7 @@ class PluginCore {
 	 *
 	 * @return array Array of post-to-post relationships.
 	 */
-	public function get_post_to_post_relationships() {
+	protected function get_post_to_post_relationships() {
 
 		if ( empty( $this->post_to_post_relationships ) ) {
 			$this->post_to_post_relationships = get_registry()->get_post_to_post_relationships();
@@ -464,7 +464,7 @@ class PluginCore {
 	 * @param  string $relationship_name The name of the relationship to query.
 	 * @return array Array of related post IDs.
 	 */
-	public function get_related_posts( $post_id, $post_type, $relationship_name ) {
+	protected function get_related_posts( $post_id, $post_type, $relationship_name ) {
 
 		$query_args = [
 			'post_type'              => $post_type,
@@ -521,7 +521,7 @@ class PluginCore {
 	 * @param  string $type       Type of request.
 	 * @return \WP_Error|array The response or WP_Error on failure.
 	 */
-	public function remote_request( $path, $args, $query_args = [], $type = 'post' ) {
+	protected function remote_request( $path, $args, $query_args = [], $type = 'post' ) {
 		$response = Elasticsearch::factory()->remote_request( $path, $args, $query_args, $type );
 		return $response;
 	}
