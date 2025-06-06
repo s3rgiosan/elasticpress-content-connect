@@ -54,36 +54,36 @@ class RelationshipHelper {
 			return [];
 		}
 
-		$related_types = [];
+		$related_post_types = [];
 
 		foreach ( $relationships as $relationship ) {
 
-			$source_types = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
-			$target_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+			$from_post_types = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
+			$to_post_types   = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
-			if ( ! in_array( $post_type, $source_types, true ) && ! in_array( $post_type, $target_types, true ) ) {
+			if ( ! in_array( $post_type, $from_post_types, true ) && ! in_array( $post_type, $to_post_types, true ) ) {
 				continue;
 			}
 
-			$relationship_types = $source_types;
-			if ( in_array( $post_type, $source_types, true ) ) {
-				$relationship_types = $target_types;
+			$relationship_post_types = $from_post_types;
+			if ( in_array( $post_type, $from_post_types, true ) ) {
+				$relationship_post_types = $to_post_types;
 			}
 
-			foreach ( $relationship_types as $relationship_type ) {
-				$related_types[ $relationship->name ][] = $relationship_type;
+			foreach ( $relationship_post_types as $relationship_post_type ) {
+				$related_post_types[ $relationship->name ][] = $relationship_post_type;
 			}
 		}
 
 		/**
 		 * Filter the related post types for a given post type.
 		 *
-		 * @param array  $related_types Related post types.
-		 * @param string $post_type     Source post type.
+		 * @param array  $related_post_types Related post types.
+		 * @param string $post_type          Source post type.
 		 */
-		$related_types = apply_filters( 'ep_content_connect_related_post_types', $related_types, $post_type );
+		$related_post_types = apply_filters( 'ep_content_connect_related_post_types', $related_post_types, $post_type );
 
-		return $related_types;
+		return $related_post_types;
 	}
 
 	/**
