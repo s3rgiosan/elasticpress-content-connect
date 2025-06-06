@@ -93,19 +93,20 @@ class RelationshipHelper {
 	 * @param  string $relationship_name Relationship name.
 	 * @return string Field name.
 	 */
-	public function get_field_name( $post_type, $relationship_name ) {
+	public function get_post_field_name( $post_type, $relationship_name ) {
 
-		$field_prefix = $this->get_field_prefix();
-		$field_name   = sprintf( '%s%s', $field_prefix, str_replace( '-', '_', $post_type ) );
+		$normalized_post_type = str_replace( '-', '_', $post_type );
+
+		$field_name = sprintf( '%s%s', $this->get_field_prefix(), $normalized_post_type );
 
 		/**
 		 * Filter the field name for a post type.
 		 *
-		 * @param string $field_name        The field name.
-		 * @param string $relationship_name Relationship name.
-		 * @param string $post_type  Post type.
+		 * @param string $field_name           The field name.
+		 * @param string $relationship_name    Relationship name.
+		 * @param string $normalized_post_type Normalized post type.
 		 */
-		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $relationship_name, $post_type );
+		$field_name = apply_filters( 'ep_content_connect_post_field_name', $field_name, $relationship_name, $normalized_post_type );
 
 		return $field_name;
 	}
@@ -116,7 +117,7 @@ class RelationshipHelper {
 	 * @param  \WP_Post $post Post object.
 	 * @return array Field value.
 	 */
-	public function get_field_value( $post ) {
+	public function get_post_field_value( $post ) {
 
 		if ( ! $post instanceof \WP_Post ) {
 			return [];
@@ -135,7 +136,7 @@ class RelationshipHelper {
 		 * @param array    $field_value The field value.
 		 * @param \WP_Post $post        Post object.
 		 */
-		$field_value = apply_filters( 'ep_content_connect_field_value', $field_value, $post );
+		$field_value = apply_filters( 'ep_content_connect_post_field_value', $field_value, $post );
 
 		return $field_value;
 	}

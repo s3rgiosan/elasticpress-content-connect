@@ -61,7 +61,7 @@ class Indexing {
 					continue;
 				}
 
-				$field_name = $this->relationship_helper->get_field_name( $relationship_post_type, $relationship_name );
+				$field_name = $this->relationship_helper->get_post_field_name( $relationship_post_type, $relationship_name );
 
 				$post_args[ $field_name ] = $related_posts;
 			}
@@ -160,7 +160,7 @@ class Indexing {
 				continue;
 			}
 
-			$related_posts[] = $this->relationship_helper->get_field_value( $post );
+			$related_posts[] = $this->relationship_helper->get_post_field_value( $post );
 		}
 
 		/**
@@ -193,12 +193,12 @@ class Indexing {
 
 		$relationship_data = [
 			$pid1 => [
-				'field' => $this->relationship_helper->get_field_name( $second_post->post_type, $name ),
-				'value' => $this->relationship_helper->get_field_value( $second_post ),
+				'field' => $this->relationship_helper->get_post_field_name( $second_post->post_type, $name ),
+				'value' => $this->relationship_helper->get_post_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field' => $this->relationship_helper->get_field_name( $first_post->post_type, $name ),
-				'value' => $this->relationship_helper->get_field_value( $first_post ),
+				'field' => $this->relationship_helper->get_post_field_name( $first_post->post_type, $name ),
+				'value' => $this->relationship_helper->get_post_field_value( $first_post ),
 			],
 		];
 
