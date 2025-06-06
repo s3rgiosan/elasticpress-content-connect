@@ -48,17 +48,19 @@ class Mapping {
 			return $mapping;
 		}
 
-		$field_mapping = $this->get_post_to_post_relationships_field_mapping();
+		$default_mapping = $this->get_post_to_post_relationships_field_mapping();
 
 		foreach ( $fields as $field ) {
 
 			/**
 			 * Filter the field mapping for each post-to-post relationship field.
 			 *
-			 * @param array  $field_mapping Field mapping for the specific field.
-			 * @param string $field The field name.
+			 * @param array  $default_mapping Default field mapping.
+			 * @param string $field           The field name.
 			 */
-			$mapping['mappings']['properties'][ $field ] = apply_filters( "ep_content_connect_post_to_post_relationships_field_{$field}_mapping", $field_mapping, $field );
+			$field_mapping = apply_filters( "ep_content_connect_post_to_post_relationships_field_{$field}_mapping", $default_mapping, $field );
+
+			$mapping['mappings']['properties'][ $field ] = $field_mapping;
 		}
 
 		return $mapping;
@@ -127,9 +129,9 @@ class Mapping {
 		];
 
 		/**
-		 * Filter the field mapping for post-to-post relationships.
+		 * Filter the default field mapping for post-to-post relationships.
 		 *
-		 * @param array $field_mapping Field mapping.
+		 * @param array $field_mapping Default field mapping.
 		 */
 		$field_mapping = apply_filters( 'ep_content_connect_post_to_post_relationships_field_mapping', $field_mapping );
 
