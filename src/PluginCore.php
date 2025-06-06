@@ -234,6 +234,7 @@ class PluginCore {
 					],
 				],
 				'post_type'  => [ 'type' => 'keyword' ],
+				'post_name'  => [ 'type' => 'keyword' ],
 			],
 		];
 
@@ -411,6 +412,7 @@ class PluginCore {
 			'post_id'    => (int) $post->ID,
 			'post_title' => $post->post_title,
 			'post_type'  => $post->post_type,
+			'post_name'  => $post->post_name,
 		];
 
 		/**
