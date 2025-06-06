@@ -20,11 +20,11 @@ class Indexing {
 	private $relationship_helper;
 
 	/**
-	 * Initialize indexing hooks.
+	 * Initialize hooks and filters.
 	 *
 	 * @return void
 	 */
-	public function init() {
+	public function setup() {
 		$this->relationship_helper = new RelationshipHelper();
 
 		add_filter( 'ep_post_sync_args', [ $this, 'index_post_to_post_relationships' ], 10, 2 );
