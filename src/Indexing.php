@@ -45,23 +45,23 @@ class Indexing {
 			return $post_args;
 		}
 
-		$post_type     = $post_args['post_type'];
-		$related_types = $this->relationship_helper->get_related_post_types( $post_type );
+		$post_type          = $post_args['post_type'];
+		$related_post_types = $this->relationship_helper->get_related_post_types( $post_type );
 
-		if ( empty( $related_types ) ) {
+		if ( empty( $related_post_types ) ) {
 			return $post_args;
 		}
 
-		foreach ( $related_types as $relationship_name => $relationship_types ) {
-			foreach ( $relationship_types as $relationship_type ) {
+		foreach ( $related_post_types as $relationship_name => $relationship_post_types ) {
+			foreach ( $relationship_post_types as $relationship_post_type ) {
 
-				$related_posts = $this->get_related_posts( $post_id, $relationship_type, $relationship_name );
+				$related_posts = $this->get_related_posts( $post_id, $relationship_post_type, $relationship_name );
 
 				if ( empty( $related_posts ) ) {
 					continue;
 				}
 
-				$field_name = $this->relationship_helper->get_field_name( $relationship_type );
+				$field_name = $this->relationship_helper->get_field_name( $relationship_post_type, $relationship_name );
 
 				$post_args[ $field_name ] = $related_posts;
 			}
@@ -85,7 +85,7 @@ class Indexing {
 			return;
 		}
 
-		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2 );
+		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2, $name );
 
 		if ( empty( $relationship_data ) ) {
 			return;
@@ -109,7 +109,7 @@ class Indexing {
 			return;
 		}
 
-		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2 );
+		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2, $name );
 
 		if ( empty( $relationship_data ) ) {
 			return;
@@ -177,11 +177,12 @@ class Indexing {
 	/**
 	 * Prepares a post-to-post relationship for Elasticsearch operations.
 	 *
-	 * @param  int $pid1 First post ID.
-	 * @param  int $pid2 Second post ID.
+	 * @param  int    $pid1 First post ID.
+	 * @param  int    $pid2 Second post ID.
+	 * @param  string $name Relationship name.
 	 * @return array Relationship data.
 	 */
-	private function prepare_post_to_post_relationship( $pid1, $pid2 ) {
+	private function prepare_post_to_post_relationship( $pid1, $pid2, $name ) {
 
 		$first_post  = get_post( $pid1 );
 		$second_post = get_post( $pid2 );
@@ -192,11 +193,11 @@ class Indexing {
 
 		$relationship_data = [
 			$pid1 => [
-				'field' => $this->relationship_helper->get_field_name( $second_post->post_type ),
+				'field' => $this->relationship_helper->get_field_name( $second_post->post_type, $name ),
 				'value' => $this->relationship_helper->get_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field' => $this->relationship_helper->get_field_name( $first_post->post_type ),
+				'field' => $this->relationship_helper->get_field_name( $first_post->post_type, $name ),
 				'value' => $this->relationship_helper->get_field_value( $first_post ),
 			],
 		];

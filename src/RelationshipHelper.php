@@ -89,10 +89,11 @@ class RelationshipHelper {
 	/**
 	 * Retrieve the field name for a post type.
 	 *
-	 * @param  string $post_type Post type.
+	 * @param  string $post_type         Post type.
+	 * @param  string $relationship_name Relationship name.
 	 * @return string Field name.
 	 */
-	public function get_field_name( $post_type ) {
+	public function get_field_name( $post_type, $relationship_name ) {
 
 		$field_prefix = $this->get_field_prefix();
 		$field_name   = sprintf( '%s%s', $field_prefix, str_replace( '-', '_', $post_type ) );
@@ -100,10 +101,11 @@ class RelationshipHelper {
 		/**
 		 * Filter the field name for a post type.
 		 *
-		 * @param string $field_name The field name.
+		 * @param string $field_name        The field name.
+		 * @param string $relationship_name Relationship name.
 		 * @param string $post_type  Post type.
 		 */
-		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $post_type );
+		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $relationship_name, $post_type );
 
 		return $field_name;
 	}

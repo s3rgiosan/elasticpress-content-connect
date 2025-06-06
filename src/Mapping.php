@@ -90,7 +90,7 @@ class Mapping {
 			$target_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
 			foreach ( $target_types as $post_type ) {
-				$fields[] = $this->relationship_helper->get_field_name( $post_type );
+				$fields[] = $this->relationship_helper->get_field_name( $post_type, $relationship->name );
 			}
 		}
 
