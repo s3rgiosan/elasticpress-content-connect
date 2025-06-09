@@ -1,20 +1,33 @@
 <?php
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect\PostToPost;
 
 /**
- * Handles Elasticsearch query modifications for relationship filtering.
+ * Post to Post relationships feature for ElasticPress.
  *
- * @package ElasticPressContentConnect
+ * @package EPContentConnect
  */
-class Query {
+class Feature extends \ElasticPress\Feature {
 
 	/**
-	 * Post to post relationships helper instance.
+	 * Post to Post relationships helper instance.
 	 *
-	 * @var PostToPost
+	 * @var Helper
 	 */
-	private $post_to_post;
+	private $helper;
+
+	/**
+	 * @inheritDoc
+	 */
+	public function __construct() {
+		$this->slug    = 'ep_content_connect_post_to_post';
+		$this->title   = esc_html__( 'Post to Post Relationships', 'ep-content-connect' );
+		$this->summary = esc_html__( 'Search and filter by Content Connect post-to-post relationships', 'ep-content-connect' );
+
+		$this->requires_install_reindex = false;
+
+		parent::__construct();
+	}
 
 	/**
 	 * Initialize hooks and filters.
@@ -22,7 +35,7 @@ class Query {
 	 * @return void
 	 */
 	public function setup() {
-		$this->post_to_post = new PostToPost();
+		$this->helper = new Helper();
 
 		add_filter( 'ep_post_formatted_args', [ $this, 'set_relationship_filters' ], 20, 3 );
 	}
@@ -50,7 +63,7 @@ class Query {
 		}
 
 		$post_type      = is_array( $args['post_type'] ) ? $args['post_type'][0] : $args['post_type'];
-		$active_filters = $this->get_post_to_post_relationship_active_filters( $post_type );
+		$active_filters = $this->get_active_filters( $post_type );
 
 		if ( empty( $active_filters ) ) {
 			return $formatted_args;
@@ -83,9 +96,9 @@ class Query {
 	 * @param  string $post_type Post type to get filters for.
 	 * @return array Active filters array.
 	 */
-	private function get_post_to_post_relationship_active_filters( $post_type ) {
+	private function get_active_filters( $post_type ) {
 
-		$supported_filters = $this->get_post_to_post_relationship_supported_filters( $post_type );
+		$supported_filters = $this->get_supported_filters( $post_type );
 
 		if ( empty( $supported_filters ) ) {
 			return [];
@@ -120,9 +133,9 @@ class Query {
 	 * @param  string $post_type Post type to get supported filters for.
 	 * @return array Supported filters array.
 	 */
-	private function get_post_to_post_relationship_supported_filters( $post_type ) {
+	private function get_supported_filters( $post_type ) {
 
-		$related_post_types = $this->post_to_post->get_related_post_types( $post_type );
+		$related_post_types = $this->helper->get_related_post_types( $post_type );
 
 		if ( empty( $related_post_types ) ) {
 			return [];
@@ -156,7 +169,7 @@ class Query {
 
 		foreach ( $active_filters as $relationship_name => $filters ) {
 			foreach ( $filters as $relationship_post_type => $filter_value ) {
-				$field_name = $this->post_to_post->get_field_name( $relationship_name, $relationship_post_type );
+				$field_name = $this->helper->get_field_name( $relationship_name, $relationship_post_type );
 
 				$grouped_filters[ $field_name ][] = $filter_value;
 			}

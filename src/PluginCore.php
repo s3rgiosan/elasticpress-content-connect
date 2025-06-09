@@ -21,7 +21,20 @@ class PluginCore {
 		$mapping = new PostToPost\Mapping();
 		$mapping->setup();
 
-		$query = new Query();
-		$query->setup();
+		add_action( 'plugins_loaded', [ $this, 'register_features' ], 11 );
+	}
+
+	/**
+	 * Register ElasticPress features.
+	 *
+	 * @return void
+	 */
+	public function register_features() {
+
+		if ( class_exists( '\ElasticPress\Features' ) ) {
+			\ElasticPress\Features::factory()->register_feature(
+				new PostToPost\Feature()
+			);
+		}
 	}
 }
