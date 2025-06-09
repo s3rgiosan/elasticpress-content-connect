@@ -11,7 +11,7 @@
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Update URI:        https://github.com/s3rgiosan/elasticpress-content-connect
- * Text Domain:       elasticpress-content-connect
+ * Text Domain:       ep-content-connect
  * Domain Path:       /languages
  * Requires Plugins:  elasticpress
  *
