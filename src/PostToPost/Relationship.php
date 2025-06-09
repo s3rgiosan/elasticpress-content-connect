@@ -1,6 +1,6 @@
 <?php
 
-namespace EPContentConnect;
+namespace EPContentConnect\PostToPost;
 
 use function TenUp\ContentConnect\Helpers\get_registry;
 
@@ -9,7 +9,7 @@ use function TenUp\ContentConnect\Helpers\get_registry;
  *
  * @package EPContentConnect
  */
-class PostToPost {
+class Helper {
 
 	/**
 	 * Cached relationships.

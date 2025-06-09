@@ -15,10 +15,10 @@ class PluginCore {
 	 * @return void
 	 */
 	public function setup() {
-		$indexing = new Indexing();
+		$indexing = new PostToPost\Indexing();
 		$indexing->setup();
 
-		$mapping = new Mapping();
+		$mapping = new PostToPost\Mapping();
 		$mapping->setup();
 
 		$query = new Query();

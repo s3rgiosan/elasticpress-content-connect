@@ -1,23 +1,23 @@
 <?php
 
-namespace EPContentConnect;
+namespace EPContentConnect\PostToPost;
 
 use ElasticPress\Elasticsearch;
 use ElasticPress\Indexables;
 
 /**
- * Handles all Elasticsearch indexing operations for relationships.
+ * Handles all Elasticsearch indexing operations for post-to-post relationships.
  *
  * @package EPContentConnect
  */
 class Indexing {
 
 	/**
-	 * Post to post relationships helper instance.
+	 * Post to Post relationships helper instance.
 	 *
-	 * @var PostToPost
+	 * @var Helper
 	 */
-	private $post_to_post;
+	private $helper;
 
 	/**
 	 * Initialize hooks and filters.
@@ -25,11 +25,11 @@ class Indexing {
 	 * @return void
 	 */
 	public function setup() {
-		$this->post_to_post = new PostToPost();
+		$this->helper = new Helper();
 
-		add_filter( 'ep_post_sync_args', [ $this, 'index_post_to_post_relationships' ], 10, 2 );
-		add_action( 'tenup-content-connect-add-relationship', [ $this, 'index_post_to_post_relationship' ], 10, 4 );
-		add_action( 'tenup-content-connect-delete-relationship', [ $this, 'deindex_post_to_post_relationship' ], 10, 4 );
+		add_filter( 'ep_post_sync_args', [ $this, 'index_relationships' ], 10, 2 );
+		add_action( 'tenup-content-connect-add-relationship', [ $this, 'index_relationship' ], 10, 4 );
+		add_action( 'tenup-content-connect-delete-relationship', [ $this, 'deindex_relationship' ], 10, 4 );
 	}
 
 	/**
@@ -39,14 +39,14 @@ class Indexing {
 	 * @param  int   $post_id   Post ID being indexed.
 	 * @return array Modified post arguments.
 	 */
-	public function index_post_to_post_relationships( $post_args, $post_id ) {
+	public function index_relationships( $post_args, $post_id ) {
 
 		if ( ! isset( $post_args['post_type'] ) ) {
 			return $post_args;
 		}
 
 		$post_type          = $post_args['post_type'];
-		$related_post_types = $this->post_to_post->get_related_post_types( $post_type );
+		$related_post_types = $this->helper->get_related_post_types( $post_type );
 
 		if ( empty( $related_post_types ) ) {
 			return $post_args;
@@ -61,7 +61,7 @@ class Indexing {
 					continue;
 				}
 
-				$field_name = $this->post_to_post->get_field_name( $relationship_name, $relationship_post_type );
+				$field_name = $this->helper->get_field_name( $relationship_name, $relationship_post_type );
 
 				$post_args[ $field_name ] = $related_posts;
 			}
@@ -79,13 +79,13 @@ class Indexing {
 	 * @param  string $type Relationship type (post-to-post or post-to-user).
 	 * @return void
 	 */
-	public function index_post_to_post_relationship( $pid1, $pid2, $name, $type ) {
+	public function index_relationship( $pid1, $pid2, $name, $type ) {
 
 		if ( 'post-to-user' === $type ) {
 			return;
 		}
 
-		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2, $name );
+		$relationship_data = $this->prepare_relationship( $pid1, $pid2, $name );
 
 		if ( empty( $relationship_data ) ) {
 			return;
@@ -103,13 +103,13 @@ class Indexing {
 	 * @param string $type Relationship type (post-to-post or post-to-user).
 	 * @return void
 	 */
-	public function deindex_post_to_post_relationship( $pid1, $pid2, $name, $type ) {
+	public function deindex_relationship( $pid1, $pid2, $name, $type ) {
 
 		if ( 'post-to-user' === $type ) {
 			return;
 		}
 
-		$relationship_data = $this->prepare_post_to_post_relationship( $pid1, $pid2, $name );
+		$relationship_data = $this->prepare_relationship( $pid1, $pid2, $name );
 
 		if ( empty( $relationship_data ) ) {
 			return;
@@ -160,7 +160,7 @@ class Indexing {
 				continue;
 			}
 
-			$related_posts[] = $this->post_to_post->get_field_value( $post );
+			$related_posts[] = $this->helper->get_field_value( $post );
 		}
 
 		/**
@@ -182,7 +182,7 @@ class Indexing {
 	 * @param  string $name Relationship name.
 	 * @return array Relationship data.
 	 */
-	private function prepare_post_to_post_relationship( $pid1, $pid2, $name ) {
+	private function prepare_relationship( $pid1, $pid2, $name ) {
 
 		$first_post  = get_post( $pid1 );
 		$second_post = get_post( $pid2 );
@@ -193,12 +193,12 @@ class Indexing {
 
 		$relationship_data = [
 			$pid1 => [
-				'field' => $this->post_to_post->get_field_name( $name, $second_post->post_type ),
-				'value' => $this->post_to_post->get_field_value( $second_post ),
+				'field' => $this->helper->get_field_name( $name, $second_post->post_type ),
+				'value' => $this->helper->get_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field' => $this->post_to_post->get_field_name( $name, $first_post->post_type ),
-				'value' => $this->post_to_post->get_field_value( $first_post ),
+				'field' => $this->helper->get_field_name( $name, $first_post->post_type ),
+				'value' => $this->helper->get_field_value( $first_post ),
 			],
 		];
 

@@ -1,22 +1,22 @@
 <?php
 
-namespace EPContentConnect;
+namespace EPContentConnect\PostToPost;
 
 use ElasticPress\Indexables;
 
 /**
- * Handles Elasticsearch mapping configuration for relationships.
+ * Handles Elasticsearch mapping configuration for post-to-post relationships.
  *
  * @package EPContentConnect
  */
 class Mapping {
 
 	/**
-	 * Post to post relationships helper instance.
+	 * Post to Post relationships helper instance.
 	 *
-	 * @var PostToPost
+	 * @var Helper
 	 */
-	private $post_to_post;
+	private $helper;
 
 	/**
 	 * Initialize hooks and filters.
@@ -24,9 +24,9 @@ class Mapping {
 	 * @return void
 	 */
 	public function setup() {
-		$this->post_to_post = new PostToPost();
+		$this->helper = new Helper();
 
-		add_filter( 'ep_config_mapping', [ $this, 'post_to_post_relationships_mapping' ], 10, 2 );
+		add_filter( 'ep_config_mapping', [ $this, 'relationships_mapping' ], 10, 2 );
 	}
 
 	/**
@@ -36,19 +36,19 @@ class Mapping {
 	 * @param string $index_name Index name.
 	 * @return array Updated mapping.
 	 */
-	public function post_to_post_relationships_mapping( $mapping, $index_name ) {
+	public function relationships_mapping( $mapping, $index_name ) {
 
 		if ( Indexables::factory()->get( 'post' )->get_index_name() !== $index_name ) {
 			return $mapping;
 		}
 
-		$fields = $this->get_post_to_post_relationship_fields();
+		$fields = $this->get_relationship_fields();
 
 		if ( empty( $fields ) ) {
 			return $mapping;
 		}
 
-		$default_mapping = $this->get_post_to_post_relationships_field_mapping();
+		$default_mapping = $this->get_relationships_field_mapping();
 
 		foreach ( $fields as $field ) {
 
@@ -71,9 +71,9 @@ class Mapping {
 	 *
 	 * @return array Array of field names.
 	 */
-	private function get_post_to_post_relationship_fields() {
+	private function get_relationship_fields() {
 
-		$relationships = $this->post_to_post->get_relationships();
+		$relationships = $this->helper->get_relationships();
 
 		if ( empty( $relationships ) ) {
 			return [];
@@ -90,7 +90,7 @@ class Mapping {
 			$target_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
 			foreach ( $target_types as $post_type ) {
-				$fields[] = $this->post_to_post->get_field_name( $relationship->name, $post_type );
+				$fields[] = $this->helper->get_field_name( $relationship->name, $post_type );
 			}
 		}
 
@@ -111,7 +111,7 @@ class Mapping {
 	 *
 	 * @return array Field mapping.
 	 */
-	private function get_post_to_post_relationships_field_mapping() {
+	private function get_relationships_field_mapping() {
 
 		$field_mapping = [
 			'type'       => 'nested',
