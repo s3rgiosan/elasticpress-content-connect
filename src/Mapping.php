@@ -12,11 +12,11 @@ use ElasticPress\Indexables;
 class Mapping {
 
 	/**
-	 * Relationship helper instance.
+	 * Post to post relationships helper instance.
 	 *
-	 * @var RelationshipHelper
+	 * @var PostToPost
 	 */
-	private $relationship_helper;
+	private $post_to_post;
 
 	/**
 	 * Initialize hooks and filters.
@@ -24,7 +24,7 @@ class Mapping {
 	 * @return void
 	 */
 	public function setup() {
-		$this->relationship_helper = new RelationshipHelper();
+		$this->post_to_post = new PostToPost();
 
 		add_filter( 'ep_config_mapping', [ $this, 'post_to_post_relationships_mapping' ], 10, 2 );
 	}
@@ -73,7 +73,7 @@ class Mapping {
 	 */
 	private function get_post_to_post_relationship_fields() {
 
-		$relationships = $this->relationship_helper->get_post_to_post_relationships();
+		$relationships = $this->post_to_post->get_relationships();
 
 		if ( empty( $relationships ) ) {
 			return [];
@@ -90,7 +90,7 @@ class Mapping {
 			$target_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
 			foreach ( $target_types as $post_type ) {
-				$fields[] = $this->relationship_helper->get_post_field_name( $post_type, $relationship->name );
+				$fields[] = $this->post_to_post->get_field_name( $post_type, $relationship->name );
 			}
 		}
 

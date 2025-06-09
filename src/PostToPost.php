@@ -5,25 +5,25 @@ namespace ElasticPressContentConnect;
 use function TenUp\ContentConnect\Helpers\get_registry;
 
 /**
- * Helper class for relationship operations.
+ * Helper class for post-to-post relationships operations.
  *
  * @package ElasticPressContentConnect
  */
-class RelationshipHelper {
+class PostToPost {
 
 	/**
 	 * Array of post-to-post relationships.
 	 *
 	 * @var array
 	 */
-	private $post_to_post_relationships = [];
+	private $relationships = [];
 
 	/**
 	 * Get all registered post-to-post relationships.
 	 *
 	 * @return array Relationship objects.
 	 */
-	public function get_post_to_post_relationships() {
+	public function get_relationships() {
 
 		if ( empty( $this->post_to_post_relationships ) ) {
 
@@ -34,10 +34,10 @@ class RelationshipHelper {
 			 *
 			 * @param array $relationships Relationship objects.
 			 */
-			$this->post_to_post_relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $relationships );
+			$this->relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $relationships );
 		}
 
-		return $this->post_to_post_relationships;
+		return $this->relationships;
 	}
 
 	/**
@@ -48,7 +48,7 @@ class RelationshipHelper {
 	 */
 	public function get_related_post_types( $post_type ) {
 
-		$relationships = $this->get_post_to_post_relationships();
+		$relationships = $this->get_relationships();
 
 		if ( empty( $relationships ) ) {
 			return [];
@@ -93,7 +93,7 @@ class RelationshipHelper {
 	 * @param  string $relationship_name Relationship name.
 	 * @return string Field name.
 	 */
-	public function get_post_field_name( $post_type, $relationship_name ) {
+	public function get_field_name( $post_type, $relationship_name ) {
 
 		$normalized_post_type = str_replace( '-', '_', $post_type );
 
@@ -106,7 +106,7 @@ class RelationshipHelper {
 		 * @param string $relationship_name    Relationship name.
 		 * @param string $normalized_post_type Normalized post type.
 		 */
-		$field_name = apply_filters( 'ep_content_connect_post_field_name', $field_name, $relationship_name, $normalized_post_type );
+		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $relationship_name, $normalized_post_type );
 
 		return $field_name;
 	}
@@ -117,7 +117,7 @@ class RelationshipHelper {
 	 * @param  \WP_Post $post Post object.
 	 * @return array Field value.
 	 */
-	public function get_post_field_value( $post ) {
+	public function get_field_value( $post ) {
 
 		if ( ! $post instanceof \WP_Post ) {
 			return [];
@@ -136,7 +136,7 @@ class RelationshipHelper {
 		 * @param array    $field_value The field value.
 		 * @param \WP_Post $post        Post object.
 		 */
-		$field_value = apply_filters( 'ep_content_connect_post_field_value', $field_value, $post );
+		$field_value = apply_filters( 'ep_content_connect_field_value', $field_value, $post );
 
 		return $field_value;
 	}

@@ -13,11 +13,11 @@ use ElasticPress\Indexables;
 class Indexing {
 
 	/**
-	 * Relationship helper instance.
+	 * Post to post relationships helper instance.
 	 *
-	 * @var RelationshipHelper
+	 * @var PostToPost
 	 */
-	private $relationship_helper;
+	private $post_to_post;
 
 	/**
 	 * Initialize hooks and filters.
@@ -25,7 +25,7 @@ class Indexing {
 	 * @return void
 	 */
 	public function setup() {
-		$this->relationship_helper = new RelationshipHelper();
+		$this->post_to_post = new PostToPost();
 
 		add_filter( 'ep_post_sync_args', [ $this, 'index_post_to_post_relationships' ], 10, 2 );
 		add_action( 'tenup-content-connect-add-relationship', [ $this, 'index_post_to_post_relationship' ], 10, 4 );
@@ -46,7 +46,7 @@ class Indexing {
 		}
 
 		$post_type          = $post_args['post_type'];
-		$related_post_types = $this->relationship_helper->get_related_post_types( $post_type );
+		$related_post_types = $this->post_to_post->get_related_post_types( $post_type );
 
 		if ( empty( $related_post_types ) ) {
 			return $post_args;
@@ -61,7 +61,7 @@ class Indexing {
 					continue;
 				}
 
-				$field_name = $this->relationship_helper->get_post_field_name( $relationship_post_type, $relationship_name );
+				$field_name = $this->post_to_post->get_field_name( $relationship_post_type, $relationship_name );
 
 				$post_args[ $field_name ] = $related_posts;
 			}
@@ -160,7 +160,7 @@ class Indexing {
 				continue;
 			}
 
-			$related_posts[] = $this->relationship_helper->get_post_field_value( $post );
+			$related_posts[] = $this->post_to_post->get_field_value( $post );
 		}
 
 		/**
@@ -193,12 +193,12 @@ class Indexing {
 
 		$relationship_data = [
 			$pid1 => [
-				'field' => $this->relationship_helper->get_post_field_name( $second_post->post_type, $name ),
-				'value' => $this->relationship_helper->get_post_field_value( $second_post ),
+				'field' => $this->post_to_post->get_field_name( $second_post->post_type, $name ),
+				'value' => $this->post_to_post->get_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field' => $this->relationship_helper->get_post_field_name( $first_post->post_type, $name ),
-				'value' => $this->relationship_helper->get_post_field_value( $first_post ),
+				'field' => $this->post_to_post->get_field_name( $first_post->post_type, $name ),
+				'value' => $this->post_to_post->get_field_value( $first_post ),
 			],
 		];
 
