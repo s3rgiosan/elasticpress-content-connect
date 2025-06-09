@@ -24,7 +24,7 @@ class Feature extends \ElasticPress\Feature {
 		$this->title   = esc_html__( 'Post to Post Relationships', 'ep-content-connect' );
 		$this->summary = esc_html__( 'Search and filter by Content Connect post-to-post relationships', 'ep-content-connect' );
 
-		$this->requires_install_reindex = false;
+		$this->requires_install_reindex = true;
 
 		parent::__construct();
 	}
