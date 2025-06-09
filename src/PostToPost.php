@@ -12,11 +12,18 @@ use function TenUp\ContentConnect\Helpers\get_registry;
 class PostToPost {
 
 	/**
-	 * Array of post-to-post relationships.
+	 * Cached relationships.
 	 *
 	 * @var array
 	 */
 	private $relationships = [];
+
+	/**
+	 * Cached related post types by source post type.
+	 *
+	 * @var array
+	 */
+	private $related_post_types = [];
 
 	/**
 	 * Get all registered post-to-post relationships.
@@ -25,19 +32,22 @@ class PostToPost {
 	 */
 	public function get_relationships() {
 
-		if ( empty( $this->relationships ) ) {
-
-			$relationships = get_registry()->get_post_to_post_relationships();
-
-			/**
-			 * Filter the post-to-post relationships.
-			 *
-			 * @param array $relationships Relationship objects.
-			 */
-			$this->relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $relationships );
+		if ( ! empty( $this->relationships ) ) {
+			return $this->relationships;
 		}
 
-		return $this->relationships;
+		$relationships = get_registry()->get_post_to_post_relationships();
+
+		/**
+		 * Filter the post-to-post relationships.
+		 *
+		 * @param array $relationships Relationship objects.
+		 */
+		$relationships = apply_filters( 'ep_content_connect_post_to_post_relationships', $relationships );
+
+		$this->relationships = $relationships;
+
+		return $relationships;
 	}
 
 	/**
@@ -47,6 +57,10 @@ class PostToPost {
 	 * @return array Related post types by relationship name.
 	 */
 	public function get_related_post_types( $post_type ) {
+
+		if ( isset( $this->related_post_types[ $post_type ] ) ) {
+			return $this->related_post_types[ $post_type ];
+		}
 
 		$relationships = $this->get_relationships();
 
@@ -82,6 +96,8 @@ class PostToPost {
 		 * @param string $post_type          Source post type.
 		 */
 		$related_post_types = apply_filters( 'ep_content_connect_related_post_types', $related_post_types, $post_type );
+
+		$this->related_post_types[ $post_type ] = $related_post_types;
 
 		return $related_post_types;
 	}
