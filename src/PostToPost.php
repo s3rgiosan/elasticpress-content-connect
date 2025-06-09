@@ -25,7 +25,7 @@ class PostToPost {
 	 */
 	public function get_relationships() {
 
-		if ( empty( $this->post_to_post_relationships ) ) {
+		if ( empty( $this->relationships ) ) {
 
 			$relationships = get_registry()->get_post_to_post_relationships();
 
