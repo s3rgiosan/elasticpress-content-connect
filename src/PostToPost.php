@@ -87,26 +87,27 @@ class PostToPost {
 	}
 
 	/**
-	 * Retrieve the field name for a post type.
+	 * Retrieve the field name for a post type relationship.
 	 *
-	 * @param  string $post_type         Post type.
 	 * @param  string $relationship_name Relationship name.
+	 * @param  string $post_type         Post type.
 	 * @return string Field name.
 	 */
-	public function get_field_name( $post_type, $relationship_name ) {
+	public function get_field_name( $relationship_name, $post_type ) {
 
-		$normalized_post_type = str_replace( '-', '_', $post_type );
+		$normalized_relationship = str_replace( '-', '_', $relationship_name );
+		$normalized_post_type    = str_replace( '-', '_', $post_type );
 
-		$field_name = sprintf( '%s%s', $this->get_field_prefix(), $normalized_post_type );
+		$field_name = sprintf( '%s_%s', $normalized_relationship, $normalized_post_type );
 
 		/**
 		 * Filter the field name for a post type.
 		 *
-		 * @param string $field_name           The field name.
-		 * @param string $relationship_name    Relationship name.
-		 * @param string $normalized_post_type Normalized post type.
+		 * @param string $field_name        The field name.
+		 * @param string $relationship_name Relationship name.
+		 * @param string $post_type         Post type.
 		 */
-		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $relationship_name, $normalized_post_type );
+		$field_name = apply_filters( 'ep_content_connect_field_name', $field_name, $relationship_name, $post_type );
 
 		return $field_name;
 	}
@@ -139,22 +140,5 @@ class PostToPost {
 		$field_value = apply_filters( 'ep_content_connect_field_value', $field_value, $post );
 
 		return $field_value;
-	}
-
-	/**
-	 * Retrieve the field prefix.
-	 *
-	 * @return string Field prefix.
-	 */
-	private function get_field_prefix() {
-
-		/**
-		 * Filter the field prefix.
-		 *
-		 * @param string $prefix The field prefix.
-		 */
-		$field_prefix = apply_filters( 'ep_content_connect_field_prefix', 'related_' );
-
-		return $field_prefix;
 	}
 }

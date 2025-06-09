@@ -61,7 +61,7 @@ class Indexing {
 					continue;
 				}
 
-				$field_name = $this->post_to_post->get_field_name( $relationship_post_type, $relationship_name );
+				$field_name = $this->post_to_post->get_field_name( $relationship_name, $relationship_post_type );
 
 				$post_args[ $field_name ] = $related_posts;
 			}
@@ -193,11 +193,11 @@ class Indexing {
 
 		$relationship_data = [
 			$pid1 => [
-				'field' => $this->post_to_post->get_field_name( $second_post->post_type, $name ),
+				'field' => $this->post_to_post->get_field_name( $name, $second_post->post_type ),
 				'value' => $this->post_to_post->get_field_value( $second_post ),
 			],
 			$pid2 => [
-				'field' => $this->post_to_post->get_field_name( $first_post->post_type, $name ),
+				'field' => $this->post_to_post->get_field_name( $name, $first_post->post_type ),
 				'value' => $this->post_to_post->get_field_value( $first_post ),
 			],
 		];
