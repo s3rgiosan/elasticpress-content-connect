@@ -152,12 +152,22 @@ class Query {
 	 */
 	private function build_filter_queries( $active_filters ) {
 
-		$filter_queries = [];
+		$grouped_filters = [];
 
 		foreach ( $active_filters as $relationship_name => $filters ) {
 			foreach ( $filters as $relationship_post_type => $filter_value ) {
-
 				$field_name = $this->post_to_post->get_field_name( $relationship_name, $relationship_post_type );
+
+				$grouped_filters[ $field_name ][] = $filter_value;
+			}
+		}
+
+		$filter_queries = [];
+
+		foreach ( $grouped_filters as $field_name => $filter_values ) {
+
+			$should_queries = [];
+			foreach ( $filter_values as $filter_value ) {
 
 				$should_queries = [];
 				if ( is_numeric( $filter_value ) ) {
@@ -185,19 +195,19 @@ class Query {
 						],
 					];
 				}
+			}
 
-				$filter_queries[] = [
-					'nested' => [
-						'path'  => $field_name,
-						'query' => [
-							'bool' => [
-								'should'               => $should_queries,
-								'minimum_should_match' => 1,
-							],
+			$filter_queries[] = [
+				'nested' => [
+					'path'  => $field_name,
+					'query' => [
+						'bool' => [
+							'should'               => $should_queries,
+							'minimum_should_match' => 1,
 						],
 					],
-				];
-			}
+				],
+			];
 		}
 
 		$filter_queries = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_queries', $filter_queries, $active_filters );
