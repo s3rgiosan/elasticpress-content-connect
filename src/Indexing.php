@@ -224,7 +224,7 @@ class Indexing {
 	private function execute_bulk_update( $relationship_data, $operation ) {
 
 		if ( empty( $relationship_data ) || ! in_array( $operation, [ 'add', 'remove' ], true ) ) {
-			return;
+			return new \WP_Error( 'ep_content_connect_invalid_data', 'Invalid relationship data or operation' );
 		}
 
 		$index_name = Indexables::factory()->get( 'post' )->get_index_name();
