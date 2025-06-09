@@ -37,7 +37,7 @@ class Query {
 	 */
 	public function set_relationship_filters( $formatted_args, $args, $wp_query ) {
 
-		if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
+		if ( is_admin() || ( defined( 'DOING_AJAX' ) && DOING_AJAX ) ) {
 			return $formatted_args;
 		}
 
