@@ -95,10 +95,7 @@ class PostToPost {
 	 */
 	public function get_field_name( $relationship_name, $post_type ) {
 
-		$normalized_relationship = str_replace( '-', '_', $relationship_name );
-		$normalized_post_type    = str_replace( '-', '_', $post_type );
-
-		$field_name = sprintf( '%s_%s', $normalized_relationship, $normalized_post_type );
+		$field_name = str_replace( '-', '_', $relationship_name );
 
 		/**
 		 * Filter the field name for a post type.
