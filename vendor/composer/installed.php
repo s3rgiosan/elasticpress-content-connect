@@ -1,19 +1,19 @@
 <?php return array(
     'root' => array(
-        'name' => '10up/elasticpress-content-connect',
+        'name' => 's3rgiosan/elasticpress-content-connect',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2167942b2948c69b82c43f4454cbc49f9ae6775c',
+        'reference' => 'c4487997063b520f51b6c9da02823cefe32e4910',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
         'dev' => true,
     ),
     'versions' => array(
-        '10up/elasticpress-content-connect' => array(
+        's3rgiosan/elasticpress-content-connect' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2167942b2948c69b82c43f4454cbc49f9ae6775c',
+            'reference' => 'c4487997063b520f51b6c9da02823cefe32e4910',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
