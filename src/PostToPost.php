@@ -1,13 +1,13 @@
 <?php
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect;
 
 use function TenUp\ContentConnect\Helpers\get_registry;
 
 /**
  * Helper class for post-to-post relationships operations.
  *
- * @package ElasticPressContentConnect
+ * @package EPContentConnect
  */
 class PostToPost {
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect;
 
 use ElasticPress\Elasticsearch;
 use ElasticPress\Indexables;
@@ -8,7 +8,7 @@ use ElasticPress\Indexables;
 /**
  * Handles all Elasticsearch indexing operations for relationships.
  *
- * @package ElasticPressContentConnect
+ * @package EPContentConnect
  */
 class Indexing {
 

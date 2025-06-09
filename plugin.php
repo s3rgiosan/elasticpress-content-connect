@@ -15,10 +15,10 @@
  * Domain Path:       /languages
  * Requires Plugins:  elasticpress
  *
- * @package           ElasticPressContentConnect
+ * @package           EPContentConnect
  */
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect;
 
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {

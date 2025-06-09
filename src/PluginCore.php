@@ -1,11 +1,11 @@
 <?php
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect;
 
 /**
  * Core plugin functionality for ElasticPress Content Connect integration.
  *
- * @package ElasticPressContentConnect
+ * @package EPContentConnect
  */
 class PluginCore {
 

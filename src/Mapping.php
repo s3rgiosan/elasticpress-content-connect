@@ -1,13 +1,13 @@
 <?php
 
-namespace ElasticPressContentConnect;
+namespace EPContentConnect;
 
 use ElasticPress\Indexables;
 
 /**
  * Handles Elasticsearch mapping configuration for relationships.
  *
- * @package ElasticPressContentConnect
+ * @package EPContentConnect
  */
 class Mapping {
 

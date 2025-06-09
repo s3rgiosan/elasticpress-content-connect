@@ -6,5 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'ElasticPressContentConnect\\' => array($baseDir . '/src'),
+    'EPContentConnect\\' => array($baseDir . '/src'),
 );

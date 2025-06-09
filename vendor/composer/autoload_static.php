@@ -9,12 +9,12 @@ class ComposerStaticInit47f2c42b0d5e8b4d11a73fc12452cd50
     public static $prefixLengthsPsr4 = array (
         'E' => 
         array (
-            'ElasticPressContentConnect\\' => 27,
+            'EPContentConnect\\' => 17,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'ElasticPressContentConnect\\' => 
+        'EPContentConnect\\' => 
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),

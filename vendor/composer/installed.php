@@ -3,7 +3,7 @@
         'name' => '10up/elasticpress-content-connect',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => 'ca5d35e6154259bac7b35321b846a39b3c57a46e',
+        'reference' => '4d862a27808c7ca2edbc9b49214a939553857072',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         '10up/elasticpress-content-connect' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => 'ca5d35e6154259bac7b35321b846a39b3c57a46e',
+            'reference' => '4d862a27808c7ca2edbc9b49214a939553857072',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
