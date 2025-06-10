@@ -37,6 +37,12 @@ class Feature extends \ElasticPress\Feature {
 	public function setup() {
 		$this->helper = new Helper();
 
+		$indexing = new Indexing();
+		$indexing->setup();
+
+		$mapping = new Mapping();
+		$mapping->setup();
+
 		add_filter( 'ep_post_formatted_args', [ $this, 'set_relationship_filters' ], 20, 3 );
 	}
 

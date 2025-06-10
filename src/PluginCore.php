@@ -15,12 +15,6 @@ class PluginCore {
 	 * @return void
 	 */
 	public function setup() {
-		$indexing = new PostToPost\Indexing();
-		$indexing->setup();
-
-		$mapping = new PostToPost\Mapping();
-		$mapping->setup();
-
 		add_action( 'plugins_loaded', [ $this, 'register_features' ], 11 );
 	}
 

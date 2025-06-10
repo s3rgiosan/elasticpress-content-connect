@@ -47,7 +47,7 @@ composer require s3rgiosan/elasticpress-content-connect
 
 1. Navigate to "ElasticPress" > "Features".
 2. Enable "Post to Post Relationships" (see the [Features](#features) section for more).
-3. Click "Save changes"
+3. Click "Save and sync now" or "Save and sync later" (sync is required for the feature to work).
 
 ## Advanced Setup
 

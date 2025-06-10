@@ -3,6 +3,7 @@
 namespace EPContentConnect\PostToPost;
 
 use ElasticPress\Elasticsearch;
+use ElasticPress\Features;
 use ElasticPress\Indexables;
 
 /**
@@ -25,6 +26,11 @@ class Indexing {
 	 * @return void
 	 */
 	public function setup() {
+
+		if ( ! Features::factory()->get_registered_feature( 'ep_content_connect_post_to_post' )->is_active() ) {
+			return;
+		}
+
 		$this->helper = new Helper();
 
 		add_filter( 'ep_post_sync_args', [ $this, 'index_relationships' ], 10, 2 );

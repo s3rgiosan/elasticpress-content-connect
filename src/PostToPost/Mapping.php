@@ -2,6 +2,7 @@
 
 namespace EPContentConnect\PostToPost;
 
+use ElasticPress\Features;
 use ElasticPress\Indexables;
 
 /**
@@ -24,6 +25,11 @@ class Mapping {
 	 * @return void
 	 */
 	public function setup() {
+
+		if ( ! Features::factory()->get_registered_feature( 'ep_content_connect_post_to_post' )->is_active() ) {
+			return;
+		}
+
 		$this->helper = new Helper();
 
 		add_filter( 'ep_config_mapping', [ $this, 'relationships_mapping' ], 10, 2 );
