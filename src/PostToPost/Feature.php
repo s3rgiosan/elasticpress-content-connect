@@ -85,6 +85,13 @@ class Feature extends \ElasticPress\Feature {
 
 		$is_filterable = $query->is_home() || $query->is_search() || $query->is_tax() || $query->is_tag() || $query->is_category() || $query->is_post_type_archive();
 
+		/**
+		 * Filter whether the current page is filterable for post-to-post relationships.
+		 *
+		 * @param  bool      $is_filterable Whether the page is filterable.
+		 * @param  \WP_Query $query         WordPress query object.
+		 * @return bool Modified filterable status.
+		 */
 		$is_filterable = apply_filters( 'ep_content_connect_is_filterable_page', $is_filterable, $query );
 
 		return $is_filterable;
@@ -116,13 +123,28 @@ class Feature extends \ElasticPress\Feature {
 				$raw_filter_value       = wp_unslash( $_GET[ $filter_name ] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
 				$sanitized_filter_value = sanitize_text_field( $raw_filter_value );
 
+				/**
+				 * Filter the filter value for post-to-post relationships.
+				 *
+				 * @param  string $sanitized_filter_value The sanitized filter value.
+				 * @param  string $raw_filter_value       The raw filter value from the URL.
+				 * @return string Modified filter value.
+				 */
 				$sanitized_filter_value = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_value', $sanitized_filter_value, $raw_filter_value );
 
 				$active_filters[ $relationship_name ][ $relationship_post_type ] = $sanitized_filter_value;
 			}
 		}
 
-		$active_filters = apply_filters( 'ep_content_connect_post_to_post_relationship_active_filters', $active_filters, $post_type );
+		/**
+		 * Filter the active filters for post-to-post relationships.
+		 *
+		 * @param  array     $active_filters Array of active filters.
+		 * @param  string    $post_type      Post type for which filters are active.
+		 * @param  \WP_Query $wp_query       WordPress query object.
+		 * @return array Modified active filters.
+		 */
+		$active_filters = apply_filters( 'ep_content_connect_post_to_post_relationship_active_filters', $active_filters, $post_type, $wp_query );
 
 		return $active_filters;
 	}
@@ -146,13 +168,29 @@ class Feature extends \ElasticPress\Feature {
 		foreach ( $related_post_types as $relationship_name => $relationship_post_types ) {
 			foreach ( $relationship_post_types as $relationship_post_type ) {
 
+				/**
+				 * Filter the filter name for post-to-post relationships.
+				 *
+				 * @param  string $relationship_post_type The relationship post type.
+				 * @param  string $relationship_name      The relationship name.
+				 * @param  string $post_type              The source post type.
+				 * @return string Modified filter name.
+				 */
 				$filter_name = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_name', $relationship_post_type, $relationship_name, $post_type );
 
 				$supported_filters[ $relationship_name ][ $relationship_post_type ] = $filter_name;
 			}
 		}
 
-		$supported_filters = apply_filters( 'ep_content_connect_post_to_post_relationship_supported_filters', $supported_filters, $post_type );
+		/**
+		 * Filter the supported filters for post-to-post relationships.
+		 *
+		 * @param  array     $supported_filters Array of supported filters.
+		 * @param  string    $post_type         The source post type.
+		 * @param  \WP_Query $wp_query          WordPress query object.
+		 * @return array Modified supported filters.
+		 */
+		$supported_filters = apply_filters( 'ep_content_connect_post_to_post_relationship_supported_filters', $supported_filters, $post_type, $wp_query );
 
 		return $supported_filters;
 	}
@@ -223,6 +261,13 @@ class Feature extends \ElasticPress\Feature {
 			];
 		}
 
+		/**
+		 * Filter the filter queries for post-to-post relationships.
+		 *
+		 * @param  array $filter_queries Array of filter queries.
+		 * @param  array $active_filters Active relationship filters.
+		 * @return array Modified filter queries.
+		 */
 		$filter_queries = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_queries', $filter_queries, $active_filters );
 
 		return $filter_queries;
