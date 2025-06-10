@@ -222,7 +222,6 @@ class Feature extends \ElasticPress\Feature {
 			$should_queries = [];
 			foreach ( $filter_values as $filter_value ) {
 
-				$should_queries = [];
 				if ( is_numeric( $filter_value ) ) {
 					$should_queries[] = [
 						'term' => [
