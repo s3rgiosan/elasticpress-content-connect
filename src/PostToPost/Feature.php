@@ -63,7 +63,7 @@ class Feature extends \ElasticPress\Feature {
 		}
 
 		$post_type      = is_array( $args['post_type'] ) ? $args['post_type'][0] : $args['post_type'];
-		$active_filters = $this->get_active_filters( $post_type );
+		$active_filters = $this->get_active_filters( $post_type, $wp_query );
 
 		if ( empty( $active_filters ) ) {
 			return $formatted_args;
@@ -100,12 +100,13 @@ class Feature extends \ElasticPress\Feature {
 	/**
 	 * Get active relationship filters from URL parameters.
 	 *
-	 * @param  string $post_type Post type to get filters for.
+	 * @param  string    $post_type Post type to get filters for.
+	 * @param  \WP_Query $wp_query  WordPress query object.
 	 * @return array Active filters array.
 	 */
-	private function get_active_filters( $post_type ) {
+	private function get_active_filters( $post_type, $wp_query ) {
 
-		$supported_filters = $this->get_supported_filters( $post_type );
+		$supported_filters = $this->get_supported_filters( $post_type, $wp_query );
 
 		if ( empty( $supported_filters ) ) {
 			return [];
@@ -152,10 +153,11 @@ class Feature extends \ElasticPress\Feature {
 	/**
 	 * Get supported relationship filters for a post type.
 	 *
-	 * @param  string $post_type Post type to get supported filters for.
+	 * @param  string    $post_type Post type to get supported filters for.
+	 * @param  \WP_Query $wp_query  WordPress query object.
 	 * @return array Supported filters array.
 	 */
-	private function get_supported_filters( $post_type ) {
+	private function get_supported_filters( $post_type, $wp_query ) {
 
 		$related_post_types = $this->helper->get_related_post_types( $post_type );
 
