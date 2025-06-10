@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       ElasticPress Content Connect
- * Description:       Integrates Content Connect with ElasticPress queries.
+ * Description:       Integrates Content Connect with ElasticPress.
  * Plugin URI:        https://github.com/s3rgiosan/elasticpress-content-connect
  * Requires at least: 6.7
  * Requires PHP:      7.4

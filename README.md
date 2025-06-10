@@ -1,8 +1,6 @@
 # ElasticPress Content Connect
 
-> Integrates [Content Connect](https://github.com/10up/wp-content-connect/) with ElasticPress.
-
-ElasticPress Content Connect bridges the gap between [Content Connect](https://github.com/10up/wp-content-connect/) and ElasticPress, enabling powerful Elasticsearch-based filtering for post-to-post relationships.
+> ElasticPress Content Connect is a WordPress plugin that integrates [Content Connect](https://github.com/10up/wp-content-connect/) relationships with [ElasticPress](https://elasticpress.io/).
 
 ## Features
 
@@ -10,13 +8,18 @@ ElasticPress Content Connect bridges the gap between [Content Connect](https://g
 
 Filter by Content Connect post-to-post relationships.
 
+* Advanced Filtering: Filter search results by Content Connect post-to-post relationships
+* Flexible Query Types: Support for ID-based, slug-based, and title-based filtering
+* Real-time Indexing: Automatically indexes relationships when they're created or modified
+* Performance Optimized: Uses Elasticsearch nested queries for efficient relationship lookups
+
 ## Requirements
 
 * PHP 7.4+
 * WordPress 6.5
-* [ElasticPress](https://github.com/10up/ElasticPress)
+* [ElasticPress](https://elasticpress.io/)
 * [Content Connect](https://github.com/10up/wp-content-connect/)
-* Elasticsearch
+* Elasticsearch per [ElasticPress requirements](https://github.com/10up/ElasticPress#requirements)
 
 ## Installation
 
@@ -43,8 +46,8 @@ composer require s3rgiosan/elasticpress-content-connect
 ## Setup
 
 1. Navigate to "ElasticPress" > "Features".
-2. Enable the plugin's provided features (see [Features](#features) section).
-3. Run the index if needed by the feature.
+2. Enable "Post to Post Relationships" (see the [Features](#features) section for more).
+3. Click "Save changes"
 
 ## Advanced Setup
 
@@ -94,7 +97,7 @@ add_filter( 'ep_content_connect_related_posts_query_args', function( $args, $pos
 
 ### Filterable Pages
 
-Enable filtering on custom page types:
+Enable filtering on custom pages:
 
 ```php
 add_filter( 'ep_content_connect_is_filterable_page', function( $is_filterable, $query ) {
@@ -105,7 +108,7 @@ add_filter( 'ep_content_connect_is_filterable_page', function( $is_filterable, $
 }, 10, 2 );
 ```
 
-## Elasticsearch Mapping
+### Elasticsearch Mapping
 
 The plugin automatically creates nested field mappings:
 
