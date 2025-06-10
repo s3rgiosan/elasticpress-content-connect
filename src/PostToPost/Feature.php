@@ -121,15 +121,21 @@ class Feature extends \ElasticPress\Feature {
 					continue;
 				}
 
-				$raw_filter_value       = wp_unslash( $_GET[ $filter_name ] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
-				$sanitized_filter_value = sanitize_text_field( $raw_filter_value );
+				$raw_filter_value = wp_unslash( $_GET[ $filter_name ] ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended, WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+
+				$sanitized_filter_value = '';
+				if ( is_array( $raw_filter_value ) ) {
+					$sanitized_filter_value = array_map( 'sanitize_text_field', $raw_filter_value );
+				} else {
+					$sanitized_filter_value = sanitize_text_field( $raw_filter_value );
+				}
 
 				/**
 				 * Filter the filter value for post-to-post relationships.
 				 *
-				 * @param  string $sanitized_filter_value The sanitized filter value.
-				 * @param  string $raw_filter_value       The raw filter value from the URL.
-				 * @return string Modified filter value.
+				 * @param  string|array $sanitized_filter_value The sanitized filter value.
+				 * @param  string|array $raw_filter_value       The raw filter value from the URL.
+				 * @return string|array Modified filter value.
 				 */
 				$sanitized_filter_value = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_value', $sanitized_filter_value, $raw_filter_value );
 
