@@ -295,21 +295,51 @@ class Feature extends \ElasticPress\Feature {
 	 */
 	private function add_filters_to_query( $formatted_args, $filter_queries ) {
 
+		/**
+		 * Filter the operator used to combine filter queries.
+		 *
+		 * @param  string $operator       The operator to use ('must', 'should', etc.). Default is 'must'.
+		 * @param  array  $filter_queries The filter queries being combined.
+		 * @return string Modified operator.
+		 */
+		$operator = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_operator', 'must', $filter_queries );
+
+		/**
+		 * Filter the minimum should match value when using 'should' operator.
+		 *
+		 * @param  int    $min_should_match Minimum number of should queries that must match. Default is 1.
+		 * @param  array  $filter_queries   The filter queries being combined.
+		 * @return int    Modified minimum should match value.
+		 */
+		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_queries );
+
 		if ( ! isset( $formatted_args['query']['bool'] ) ) {
 			$formatted_args['query'] = [
 				'bool' => [
-					'must' => $filter_queries,
+					$operator => $filter_queries,
 				],
 			];
-		} else {
-			if ( ! isset( $formatted_args['query']['bool']['must'] ) ) {
-				$formatted_args['query']['bool']['must'] = [];
+
+			// Add minimum_should_match when using 'should' operator.
+			if ( 'should' === $operator ) {
+				$formatted_args['query']['bool']['minimum_should_match'] = $min_should_match;
 			}
 
-			$formatted_args['query']['bool']['must'] = array_merge(
-				$formatted_args['query']['bool']['must'],
-				$filter_queries
-			);
+			return $formatted_args;
+		}
+
+		if ( ! isset( $formatted_args['query']['bool'][ $operator ] ) ) {
+			$formatted_args['query']['bool'][ $operator ] = [];
+		}
+
+		$formatted_args['query']['bool'][ $operator ] = array_merge(
+			$formatted_args['query']['bool'][ $operator ],
+			$filter_queries
+		);
+
+		// Add minimum_should_match when using 'should' operator.
+		if ( 'should' === $operator && ! isset( $formatted_args['query']['bool']['minimum_should_match'] ) ) {
+			$formatted_args['query']['bool']['minimum_should_match'] = $min_should_match;
 		}
 
 		return $formatted_args;
