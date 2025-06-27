@@ -321,8 +321,8 @@ class Feature extends \ElasticPress\Feature {
 		 */
 		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_queries );
 
-		if ( ! isset( $formatted_args['query']['bool'] ) ) {
-			$formatted_args['query'] = [
+		if ( ! isset( $formatted_args['post_filter'] ) ) {
+			$formatted_args['post_filter'] = [
 				'bool' => [
 					$operator => $filter_queries,
 				],
@@ -330,24 +330,24 @@ class Feature extends \ElasticPress\Feature {
 
 			// Add minimum_should_match when using 'should' operator.
 			if ( 'should' === $operator ) {
-				$formatted_args['query']['bool']['minimum_should_match'] = $min_should_match;
+				$formatted_args['post_filter']['bool']['minimum_should_match'] = $min_should_match;
 			}
 
 			return $formatted_args;
 		}
 
-		if ( ! isset( $formatted_args['query']['bool'][ $operator ] ) ) {
-			$formatted_args['query']['bool'][ $operator ] = [];
+		if ( ! isset( $formatted_args['post_filter']['bool'][ $operator ] ) ) {
+			$formatted_args['post_filter']['bool'][ $operator ] = [];
 		}
 
-		$formatted_args['query']['bool'][ $operator ] = array_merge(
-			$formatted_args['query']['bool'][ $operator ],
+		$formatted_args['post_filter']['bool'][ $operator ] = array_merge(
+			$formatted_args['post_filter']['bool'][ $operator ],
 			$filter_queries
 		);
 
 		// Add minimum_should_match when using 'should' operator.
-		if ( 'should' === $operator && ! isset( $formatted_args['query']['bool']['minimum_should_match'] ) ) {
-			$formatted_args['query']['bool']['minimum_should_match'] = $min_should_match;
+		if ( 'should' === $operator && ! isset( $formatted_args['post_filter']['bool']['minimum_should_match'] ) ) {
+			$formatted_args['post_filter']['bool']['minimum_should_match'] = $min_should_match;
 		}
 
 		return $formatted_args;
