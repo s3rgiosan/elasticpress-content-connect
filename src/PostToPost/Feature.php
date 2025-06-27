@@ -68,15 +68,23 @@ class Feature extends \ElasticPress\Feature {
 			return $formatted_args;
 		}
 
-		$post_type      = is_array( $args['post_type'] ) ? $args['post_type'][0] : $args['post_type'];
-		$active_filters = $this->get_active_filters( $post_type, $wp_query );
+		$post_types         = is_array( $args['post_type'] ) ? $args['post_type'] : [ $args['post_type'] ];
+		$all_filter_queries = [];
 
-		if ( empty( $active_filters ) ) {
-			return $formatted_args;
+		foreach ( $post_types as $post_type ) {
+			$active_filters = $this->get_active_filters( $post_type, $wp_query );
+
+			if ( empty( $active_filters ) ) {
+				continue;
+			}
+
+			$filter_queries     = $this->build_filter_queries( $active_filters );
+			$all_filter_queries = array_merge( $all_filter_queries, $filter_queries );
 		}
 
-		$filter_queries = $this->build_filter_queries( $active_filters );
-		$formatted_args = $this->add_filters_to_query( $formatted_args, $filter_queries );
+		if ( ! empty( $all_filter_queries ) ) {
+			$formatted_args = $this->add_filters_to_query( $formatted_args, $all_filter_queries );
+		}
 
 		return $formatted_args;
 	}
