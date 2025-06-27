@@ -78,12 +78,12 @@ class Feature extends \ElasticPress\Feature {
 				continue;
 			}
 
-			$filter_queries     = $this->build_filter_queries( $active_filters );
+			$filter_queries     = $this->build_filter_queries( $active_filters, $wp_query );
 			$all_filter_queries = array_merge( $all_filter_queries, $filter_queries );
 		}
 
 		if ( ! empty( $all_filter_queries ) ) {
-			$formatted_args = $this->add_filters_to_query( $formatted_args, $all_filter_queries );
+			$formatted_args = $this->add_filters_to_query( $formatted_args, $all_filter_queries, $wp_query );
 		}
 
 		return $formatted_args;
@@ -220,10 +220,11 @@ class Feature extends \ElasticPress\Feature {
 	/**
 	 * Build Elasticsearch filter queries from active filters.
 	 *
-	 * @param  array $active_filters Active relationship filters.
+	 * @param  array     $active_filters Active relationship filters.
+	 * @param  \WP_Query $wp_query       WordPress query object.
 	 * @return array Elasticsearch filter queries.
 	 */
-	private function build_filter_queries( $active_filters ) {
+	private function build_filter_queries( $active_filters, $wp_query ) {
 
 		$grouped_filters = [];
 
@@ -285,11 +286,12 @@ class Feature extends \ElasticPress\Feature {
 		/**
 		 * Filter the filter queries for post-to-post relationships.
 		 *
-		 * @param  array $filter_queries Array of filter queries.
-		 * @param  array $active_filters Active relationship filters.
+		 * @param  array     $filter_queries Array of filter queries.
+		 * @param  array     $active_filters Active relationship filters.
+		 * @param  \WP_Query $wp_query       WordPress query object.
 		 * @return array Modified filter queries.
 		 */
-		$filter_queries = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_queries', $filter_queries, $active_filters );
+		$filter_queries = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_queries', $filter_queries, $active_filters, $wp_query );
 
 		return $filter_queries;
 	}
@@ -297,29 +299,32 @@ class Feature extends \ElasticPress\Feature {
 	/**
 	 * Add filter queries to formatted Elasticsearch arguments.
 	 *
-	 * @param  array $formatted_args Current formatted arguments.
-	 * @param  array $filter_queries Filter queries to add.
+	 * @param  array     $formatted_args Current formatted arguments.
+	 * @param  array     $filter_queries Filter queries to add.
+	 * @param  \WP_Query $wp_query       WordPress query object.
 	 * @return array Modified formatted arguments.
 	 */
-	private function add_filters_to_query( $formatted_args, $filter_queries ) {
+	private function add_filters_to_query( $formatted_args, $filter_queries, $wp_query ) {
 
 		/**
 		 * Filter the operator used to combine filter queries.
 		 *
-		 * @param  string $operator       The operator to use ('must', 'should', etc.). Default is 'must'.
-		 * @param  array  $filter_queries The filter queries being combined.
+		 * @param  string    $operator       The operator to use ('must', 'should', etc.). Default is 'must'.
+		 * @param  array     $filter_queries The filter queries being combined.
+		 * @param  \WP_Query $wp_query       WordPress query object.
 		 * @return string Modified operator.
 		 */
-		$operator = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_operator', 'must', $filter_queries );
+		$operator = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_operator', 'must', $filter_queries, $wp_query );
 
 		/**
 		 * Filter the minimum should match value when using 'should' operator.
 		 *
-		 * @param  int    $min_should_match Minimum number of should queries that must match. Default is 1.
-		 * @param  array  $filter_queries   The filter queries being combined.
+		 * @param  int       $min_should_match Minimum number of should queries that must match. Default is 1.
+		 * @param  array     $filter_queries   The filter queries being combined.
+		 * @param  \WP_Query $wp_query         WordPress query object.
 		 * @return int    Modified minimum should match value.
 		 */
-		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_queries );
+		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_queries, $wp_query );
 
 		if ( ! isset( $formatted_args['post_filter'] ) ) {
 			$formatted_args['post_filter'] = [
