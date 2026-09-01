@@ -242,31 +242,33 @@ class Feature extends \ElasticPress\Feature {
 
 			$should_queries = [];
 			foreach ( $filter_values as $filter_value ) {
+				foreach ( (array) $filter_value as $value ) {
 
-				if ( is_numeric( $filter_value ) ) {
-					$should_queries[] = [
-						'term' => [
-							$field_name . '.post_id' => (int) $filter_value,
-						],
-					];
-				} else {
-					$should_queries[] = [
-						'term' => [
-							$field_name . '.post_name' => $filter_value,
-						],
-					];
+					if ( is_numeric( $value ) ) {
+						$should_queries[] = [
+							'term' => [
+								$field_name . '.post_id' => (int) $value,
+							],
+						];
+					} else {
+						$should_queries[] = [
+							'term' => [
+								$field_name . '.post_name' => $value,
+							],
+						];
 
-					$should_queries[] = [
-						'term' => [
-							$field_name . '.post_title.raw' => $filter_value,
-						],
-					];
+						$should_queries[] = [
+							'term' => [
+								$field_name . '.post_title.raw' => $value,
+							],
+						];
 
-					$should_queries[] = [
-						'match' => [
-							$field_name . '.post_title' => $filter_value,
-						],
-					];
+						$should_queries[] = [
+							'match' => [
+								$field_name . '.post_title' => $value,
+							],
+						];
+					}
 				}
 			}
 
