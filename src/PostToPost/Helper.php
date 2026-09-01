@@ -36,6 +36,10 @@ class Helper {
 			return $this->relationships;
 		}
 
+		if ( ! function_exists( 'TenUp\ContentConnect\Helpers\get_registry' ) ) {
+			return [];
+		}
+
 		$relationships = get_registry()->get_post_to_post_relationships();
 
 		/**
