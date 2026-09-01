@@ -7,14 +7,14 @@ namespace Composer\Autoload;
 class ComposerStaticInit47f2c42b0d5e8b4d11a73fc12452cd50
 {
     public static $prefixLengthsPsr4 = array (
-        'E' => 
+        'E' =>
         array (
             'EPContentConnect\\' => 17,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'EPContentConnect\\' => 
+        'EPContentConnect\\' =>
         array (
             0 => __DIR__ . '/../..' . '/src',
         ),
@@ -22,6 +22,11 @@ class ComposerStaticInit47f2c42b0d5e8b4d11a73fc12452cd50
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
+        'EPContentConnect\\PluginCore' => __DIR__ . '/../..' . '/src/PluginCore.php',
+        'EPContentConnect\\PostToPost\\Feature' => __DIR__ . '/../..' . '/src/PostToPost/Feature.php',
+        'EPContentConnect\\PostToPost\\Helper' => __DIR__ . '/../..' . '/src/PostToPost/Helper.php',
+        'EPContentConnect\\PostToPost\\Indexing' => __DIR__ . '/../..' . '/src/PostToPost/Indexing.php',
+        'EPContentConnect\\PostToPost\\Mapping' => __DIR__ . '/../..' . '/src/PostToPost/Mapping.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

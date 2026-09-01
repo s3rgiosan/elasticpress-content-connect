@@ -1,0 +1,160 @@
+<?php
+/**
+ * Tests covering the multi-value filter param -> Elasticsearch "term" bug.
+ *
+ * @package EPContentConnect
+ */
+
+namespace EPContentConnect\Tests\Unit;
+
+use ReflectionMethod;
+use ReflectionProperty;
+use WP_Query;
+use WP_UnitTestCase;
+use EPContentConnect\PostToPost\Feature;
+use EPContentConnect\PostToPost\Helper;
+
+/**
+ * Feature::get_active_filters() supports array values
+ * (`?filter[]=a&filter[]=b`, sanitized via array_map( 'sanitize_text_field', ... )),
+ * but Feature::build_filter_queries() (src/PostToPost/Feature.php ~244)
+ * treats every filter value as a scalar. When the value is actually an
+ * array, it gets embedded directly into an Elasticsearch `term` clause,
+ * e.g. `[ 'term' => [ $field_name . '.post_name' => [ 'alpha', 'beta' ] ] ]`,
+ * which Elasticsearch rejects with
+ * "[term] query does not support array of values".
+ */
+class FeatureFilterQueriesTest extends WP_UnitTestCase {
+
+	/**
+	 * Invokes the private Feature::build_filter_queries() method.
+	 *
+	 * build_filter_queries() is private and has no public seam: it is only
+	 * ever reached internally from set_relationship_filters(), which in
+	 * turn requires the full ElasticPress `ep_post_formatted_args` pipeline
+	 * (a live query, admin/AJAX checks, is_filterable_page(), etc.) just to
+	 * get to it. Reflection is used here because there is no other way to
+	 * exercise this query-building logic directly.
+	 *
+	 * @param  Feature   $feature        Feature instance.
+	 * @param  array     $active_filters Active filters, keyed the same way
+	 *                                   Feature::get_active_filters() produces them:
+	 *                                   [ $relationship_name => [ $relationship_post_type => $filter_value ] ].
+	 * @param  WP_Query  $wp_query       WordPress query object.
+	 * @return array Built Elasticsearch filter queries.
+	 */
+	private function build_filter_queries( Feature $feature, array $active_filters, WP_Query $wp_query ): array {
+
+		$method = new ReflectionMethod( Feature::class, 'build_filter_queries' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $feature, $active_filters, $wp_query );
+	}
+
+	/**
+	 * Creates a Feature instance with its private Helper dependency wired up,
+	 * without running Feature::setup() (which requires the ElasticPress
+	 * feature registration/activation machinery we don't need for this test).
+	 *
+	 * @return Feature
+	 */
+	private function make_feature(): Feature {
+
+		$feature = new Feature();
+
+		$helper_property = new ReflectionProperty( Feature::class, 'helper' );
+		$helper_property->setAccessible( true );
+		$helper_property->setValue( $feature, new Helper() );
+
+		return $feature;
+	}
+
+	/**
+	 * Recursively walks a built query array and collects the field names of
+	 * every `term` clause whose value is itself an array.
+	 *
+	 * @param  mixed $node       Current node being inspected.
+	 * @param  array $violations Collected offending field names (by reference).
+	 * @return void
+	 */
+	private function collect_array_valued_term_clauses( $node, array &$violations ): void {
+
+		if ( ! is_array( $node ) ) {
+			return;
+		}
+
+		if ( isset( $node['term'] ) && is_array( $node['term'] ) ) {
+			foreach ( $node['term'] as $field => $value ) {
+				if ( is_array( $value ) ) {
+					$violations[] = $field;
+				}
+			}
+		}
+
+		foreach ( $node as $value ) {
+			if ( is_array( $value ) ) {
+				$this->collect_array_valued_term_clauses( $value, $violations );
+			}
+		}
+	}
+
+	public function test_array_filter_value_does_not_produce_a_term_clause_with_an_array_value(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		// Shape matches what Feature::get_active_filters() builds when a
+		// `?filter[]=alpha&filter[]=beta` param is present: an array of
+		// non-numeric strings (slugs) for one relationship post type.
+		$active_filters = [
+			'related_content' => [
+				'page' => [ 'alpha', 'beta' ],
+			],
+		];
+
+		$filter_queries = $this->build_filter_queries( $feature, $active_filters, $wp_query );
+
+		$violations = [];
+		$this->collect_array_valued_term_clauses( $filter_queries, $violations );
+
+		// FAILS until fix: array filter values must expand to terms / per-value clauses, not a term with an array value.
+		$this->assertSame(
+			[],
+			$violations,
+			'No "term" clause should ever carry an array as its value; Elasticsearch rejects that with "[term] query does not support array of values".'
+		);
+	}
+
+	public function test_scalar_filter_value_still_builds_a_valid_single_value_term_clause(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		$active_filters = [
+			'related_content' => [
+				'page' => 'alpha',
+			],
+		];
+
+		$filter_queries = $this->build_filter_queries( $feature, $active_filters, $wp_query );
+
+		$violations = [];
+		$this->collect_array_valued_term_clauses( $filter_queries, $violations );
+
+		$this->assertSame( [], $violations, 'A scalar filter value should never produce a "term" clause with an array value.' );
+
+		$this->assertNotEmpty( $filter_queries );
+
+		$should_clauses = $filter_queries[0]['nested']['query']['bool']['should'];
+
+		$term_field_names = [];
+		foreach ( $should_clauses as $clause ) {
+			if ( isset( $clause['term'] ) ) {
+				$term_field_names = array_merge( $term_field_names, array_keys( $clause['term'] ) );
+			}
+		}
+
+		$this->assertContains( 'related_content.post_name', $term_field_names );
+		$this->assertContains( 'related_content.post_title.raw', $term_field_names );
+	}
+}

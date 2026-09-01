@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<phpunit
+	bootstrap="tests/php/bootstrap.php"
+	colors="true"
+	convertErrorsToExceptions="true"
+	convertNoticesToExceptions="true"
+	convertWarningsToExceptions="true"
+>
+	<testsuites>
+		<testsuite name="default">
+			<directory suffix="Test.php">tests/php/unit</directory>
+		</testsuite>
+	</testsuites>
+	<php>
+		<const name="WP_TESTS_DOMAIN" value="example.org"/>
+		<const name="WP_TESTS_EMAIL" value="admin@example.org"/>
+		<const name="WP_TESTS_TITLE" value="Test Blog"/>
+		<const name="WP_TESTS_PHPUNIT_POLYFILLS_PATH" value="vendor/yoast/phpunit-polyfills"/>
+	</php>
+</phpunit>

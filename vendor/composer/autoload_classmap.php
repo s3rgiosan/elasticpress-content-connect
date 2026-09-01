@@ -7,4 +7,9 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'EPContentConnect\\PluginCore' => $baseDir . '/src/PluginCore.php',
+    'EPContentConnect\\PostToPost\\Feature' => $baseDir . '/src/PostToPost/Feature.php',
+    'EPContentConnect\\PostToPost\\Helper' => $baseDir . '/src/PostToPost/Helper.php',
+    'EPContentConnect\\PostToPost\\Indexing' => $baseDir . '/src/PostToPost/Indexing.php',
+    'EPContentConnect\\PostToPost\\Mapping' => $baseDir . '/src/PostToPost/Mapping.php',
 );

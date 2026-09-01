@@ -1,0 +1,15 @@
+{
+	"core": null,
+	"phpVersion": "8.2",
+	"port": 8901,
+	"testsPort": 8902,
+	"plugins": [
+		"../elasticpress",
+		"10up/wp-content-connect#develop",
+		"."
+	],
+	"config": {
+		"WP_DEBUG": true,
+		"WP_DEBUG_LOG": true
+	}
+}
