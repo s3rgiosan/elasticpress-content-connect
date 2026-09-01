@@ -69,7 +69,7 @@ class Indexing {
 
 				$field_name = $this->helper->get_field_name( $relationship_name, $relationship_post_type );
 
-				$post_args[ $field_name ] = $related_posts;
+				$post_args[ $field_name ] = array_merge( $post_args[ $field_name ] ?? [], $related_posts );
 			}
 		}
 
