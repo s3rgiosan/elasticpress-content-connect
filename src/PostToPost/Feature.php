@@ -68,9 +68,13 @@ class Feature extends \ElasticPress\Feature {
 			return $formatted_args;
 		}
 
-		$post_types         = is_array( $args['post_type'] ) ? $args['post_type'] : [ $args['post_type'] ];
-		$all_filter_queries = [];
+		$post_types          = is_array( $args['post_type'] ) ? $args['post_type'] : [ $args['post_type'] ];
+		$filter_query_groups = [];
 
+		// Keep each queried post type's filter queries in their own group.
+		// Different post types populate different relationship fields, so their
+		// nested queries must not be flattened into a single `must` (no document
+		// could satisfy them all at once); they are OR'd across groups later.
 		foreach ( $post_types as $post_type ) {
 			$active_filters = $this->get_active_filters( $post_type, $wp_query );
 
@@ -78,12 +82,17 @@ class Feature extends \ElasticPress\Feature {
 				continue;
 			}
 
-			$filter_queries     = $this->build_filter_queries( $active_filters, $wp_query );
-			$all_filter_queries = array_merge( $all_filter_queries, $filter_queries );
+			$filter_queries = $this->build_filter_queries( $active_filters, $wp_query );
+
+			if ( empty( $filter_queries ) ) {
+				continue;
+			}
+
+			$filter_query_groups[] = $filter_queries;
 		}
 
-		if ( ! empty( $all_filter_queries ) ) {
-			$formatted_args = $this->add_filters_to_query( $formatted_args, $all_filter_queries, $wp_query );
+		if ( ! empty( $filter_query_groups ) ) {
+			$formatted_args = $this->add_filters_to_query( $formatted_args, $filter_query_groups, $wp_query );
 		}
 
 		return $formatted_args;
@@ -301,59 +310,89 @@ class Feature extends \ElasticPress\Feature {
 	/**
 	 * Add filter queries to formatted Elasticsearch arguments.
 	 *
-	 * @param  array     $formatted_args Current formatted arguments.
-	 * @param  array     $filter_queries Filter queries to add.
-	 * @param  \WP_Query $wp_query       WordPress query object.
+	 * Each entry in $filter_query_groups is one queried post type's flat list of
+	 * nested filter queries. Within a group the queries are combined with the
+	 * within-group operator (default 'must'); across groups they are OR'd with
+	 * 'should' + minimum_should_match so a document is included when it satisfies
+	 * any one post type's full filter group. A lone group is placed directly
+	 * under the within-group operator, with no extra should-of-groups wrapper, so
+	 * the single-post-type result stays structurally identical to before.
+	 *
+	 * @param  array     $formatted_args      Current formatted arguments.
+	 * @param  array     $filter_query_groups List of per-post-type filter query groups.
+	 * @param  \WP_Query $wp_query            WordPress query object.
 	 * @return array Modified formatted arguments.
 	 */
-	private function add_filters_to_query( $formatted_args, $filter_queries, $wp_query ) {
+	private function add_filters_to_query( $formatted_args, $filter_query_groups, $wp_query ) {
 
 		/**
-		 * Filter the operator used to combine filter queries.
+		 * Filter the operator used to combine filter queries within a post type's group.
 		 *
-		 * @param  string    $operator       The operator to use ('must', 'should', etc.). Default is 'must'.
-		 * @param  array     $filter_queries The filter queries being combined.
-		 * @param  \WP_Query $wp_query       WordPress query object.
+		 * @param  string    $operator            The operator to use ('must', 'should', etc.). Default is 'must'.
+		 * @param  array     $filter_query_groups The per-post-type filter query groups being combined.
+		 * @param  \WP_Query $wp_query            WordPress query object.
 		 * @return string Modified operator.
 		 */
-		$operator = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_operator', 'must', $filter_queries, $wp_query );
+		$operator = apply_filters( 'ep_content_connect_post_to_post_relationship_filter_operator', 'must', $filter_query_groups, $wp_query );
 
 		/**
 		 * Filter the minimum should match value when using 'should' operator.
 		 *
-		 * @param  int       $min_should_match Minimum number of should queries that must match. Default is 1.
-		 * @param  array     $filter_queries   The filter queries being combined.
-		 * @param  \WP_Query $wp_query         WordPress query object.
+		 * @param  int       $min_should_match    Minimum number of should queries that must match. Default is 1.
+		 * @param  array     $filter_query_groups The per-post-type filter query groups being combined.
+		 * @param  \WP_Query $wp_query            WordPress query object.
 		 * @return int    Modified minimum should match value.
 		 */
-		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_queries, $wp_query );
+		$min_should_match = apply_filters( 'ep_content_connect_post_to_post_relationship_minimum_should_match', 1, $filter_query_groups, $wp_query );
+
+		$group_count = count( $filter_query_groups );
+
+		if ( $group_count > 1 ) {
+			// OR the per-post-type groups: a document matches if it satisfies any
+			// one post type's full filter group.
+			$merge_operator = 'should';
+			$clauses        = [];
+
+			foreach ( $filter_query_groups as $group ) {
+				$clauses[] = [
+					'bool' => [
+						$operator => $group,
+					],
+				];
+			}
+		} else {
+			// Single group: place its nested queries directly under the
+			// within-group operator, preserving the previous structure.
+			$merge_operator = $operator;
+			$clauses        = reset( $filter_query_groups );
+		}
 
 		if ( ! isset( $formatted_args['post_filter'] ) ) {
 			$formatted_args['post_filter'] = [
 				'bool' => [
-					$operator => $filter_queries,
+					$merge_operator => $clauses,
 				],
 			];
 
 			// Add minimum_should_match when using 'should' operator.
-			if ( 'should' === $operator ) {
+			if ( 'should' === $merge_operator ) {
 				$formatted_args['post_filter']['bool']['minimum_should_match'] = $min_should_match;
 			}
 
 			return $formatted_args;
 		}
 
-		if ( ! isset( $formatted_args['post_filter']['bool'][ $operator ] ) ) {
-			$formatted_args['post_filter']['bool'][ $operator ] = [];
+		if ( ! isset( $formatted_args['post_filter']['bool'][ $merge_operator ] ) ) {
+			$formatted_args['post_filter']['bool'][ $merge_operator ] = [];
 		}
 
-		$formatted_args['post_filter']['bool'][ $operator ] = array_merge(
-			$formatted_args['post_filter']['bool'][ $operator ],
-			$filter_queries
+		$formatted_args['post_filter']['bool'][ $merge_operator ] = array_merge(
+			$formatted_args['post_filter']['bool'][ $merge_operator ],
+			$clauses
 		);
 
 		// Add minimum_should_match when using 'should' operator.
-		if ( 'should' === $operator && ! isset( $formatted_args['post_filter']['bool']['minimum_should_match'] ) ) {
+		if ( 'should' === $merge_operator && ! isset( $formatted_args['post_filter']['bool']['minimum_should_match'] ) ) {
 			$formatted_args['post_filter']['bool']['minimum_should_match'] = $min_should_match;
 		}
 

@@ -52,6 +52,28 @@ class FeatureFilterQueriesTest extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Invokes the private Feature::add_filters_to_query() method.
+	 *
+	 * add_filters_to_query() is private and, like build_filter_queries(), is
+	 * only ever reached from set_relationship_filters() behind the full
+	 * ElasticPress `ep_post_formatted_args` pipeline. Reflection is the only way
+	 * to exercise the per-post-type grouping / OR-of-groups assembly directly.
+	 *
+	 * @param  Feature  $feature             Feature instance.
+	 * @param  array    $formatted_args      Current formatted arguments.
+	 * @param  array    $filter_query_groups List of per-post-type filter query groups.
+	 * @param  WP_Query $wp_query            WordPress query object.
+	 * @return array Modified formatted arguments.
+	 */
+	private function add_filters_to_query( Feature $feature, array $formatted_args, array $filter_query_groups, WP_Query $wp_query ): array {
+
+		$method = new ReflectionMethod( Feature::class, 'add_filters_to_query' );
+		$method->setAccessible( true );
+
+		return $method->invoke( $feature, $formatted_args, $filter_query_groups, $wp_query );
+	}
+
+	/**
 	 * Creates a Feature instance with its private Helper dependency wired up,
 	 * without running Feature::setup() (which requires the ElasticPress
 	 * feature registration/activation machinery we don't need for this test).
@@ -156,5 +178,63 @@ class FeatureFilterQueriesTest extends WP_UnitTestCase {
 
 		$this->assertContains( 'related_content.post_name', $term_field_names );
 		$this->assertContains( 'related_content.post_title.raw', $term_field_names );
+	}
+
+	public function test_multiple_post_type_groups_are_ored_under_should_with_minimum_should_match(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		// Two queried post types, each carrying its own relationship filter.
+		// Each group is a flat list of nested queries, exactly as
+		// set_relationship_filters() collects it per queried post type.
+		$group_a = $this->build_filter_queries( $feature, [ 'related_content' => [ 'page' => 'alpha' ] ], $wp_query );
+		$group_b = $this->build_filter_queries( $feature, [ 'related_content' => [ 'post' => 'beta' ] ], $wp_query );
+
+		$formatted_args = $this->add_filters_to_query( $feature, [], [ $group_a, $group_b ], $wp_query );
+
+		$bool = $formatted_args['post_filter']['bool'];
+
+		// Groups must be OR'd, not AND'd into a single `must`.
+		$this->assertArrayHasKey( 'should', $bool );
+		$this->assertArrayNotHasKey( 'must', $bool );
+		$this->assertSame( 1, $bool['minimum_should_match'] );
+
+		// One should clause per post-type group, each an inner bool wrapping
+		// that group's own nested filter(s) under the within-group operator.
+		$this->assertCount( 2, $bool['should'] );
+
+		foreach ( $bool['should'] as $group_clause ) {
+			$this->assertArrayHasKey( 'bool', $group_clause );
+			$this->assertArrayHasKey( 'must', $group_clause['bool'] );
+
+			foreach ( $group_clause['bool']['must'] as $nested ) {
+				$this->assertArrayHasKey( 'nested', $nested );
+			}
+		}
+
+		// Each group keeps its own nested queries; they are not merged together.
+		$this->assertSame( $group_a, $formatted_args['post_filter']['bool']['should'][0]['bool']['must'] );
+		$this->assertSame( $group_b, $formatted_args['post_filter']['bool']['should'][1]['bool']['must'] );
+	}
+
+	public function test_single_post_type_group_keeps_the_previous_structure(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		$group = $this->build_filter_queries( $feature, [ 'related_content' => [ 'page' => 'alpha' ] ], $wp_query );
+
+		$formatted_args = $this->add_filters_to_query( $feature, [], [ $group ], $wp_query );
+
+		$bool = $formatted_args['post_filter']['bool'];
+
+		// A lone group is placed directly under the within-group operator, with
+		// no extra should-of-groups wrapper (structurally equivalent to before).
+		$this->assertArrayHasKey( 'must', $bool );
+		$this->assertArrayNotHasKey( 'should', $bool );
+		$this->assertArrayNotHasKey( 'minimum_should_match', $bool );
+
+		$this->assertSame( $group, $bool['must'] );
 	}
 }
