@@ -171,6 +171,7 @@ class Indexing {
 		$query_args = [
 			'post_type'              => $related_post_type,
 			'posts_per_page'         => 100,
+			'post__not_in'           => [ $post_id ],
 			'relationship_query'     => [
 				'name'            => $relationship_name,
 				'related_to_post' => $post_id,
