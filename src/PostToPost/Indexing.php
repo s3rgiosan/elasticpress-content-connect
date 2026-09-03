@@ -190,12 +190,29 @@ class Indexing {
 		 */
 		$query_args = apply_filters( 'ep_content_connect_related_posts_query_args', $query_args, $post_id, $relationship_name );
 
-		$query = new \WP_Query( $query_args );
-		$posts = $query->get_posts();
+		$page_size = (int) ( $query_args['posts_per_page'] ?? 100 );
+
+		$all_posts = [];
+		$paged     = 1;
+
+		do {
+			$page_args          = $query_args;
+			$page_args['paged'] = $paged;
+
+			$query = new \WP_Query( $page_args );
+			$posts = $query->get_posts();
+
+			$all_posts = array_merge( $all_posts, $posts );
+
+			$posts_count = count( $posts );
+
+			++$paged;
+
+		} while ( -1 !== $page_size && $posts_count === $page_size );
 
 		$related_posts = [];
 
-		foreach ( $posts as $post ) {
+		foreach ( $all_posts as $post ) {
 
 			if ( ! $post instanceof \WP_Post ) {
 				continue;
@@ -210,7 +227,7 @@ class Indexing {
 		 * @param array $related_posts Related posts.
 		 * @param array $posts         Original post objects.
 		 */
-		$related_posts = apply_filters( 'ep_content_connect_related_posts', $related_posts, $posts );
+		$related_posts = apply_filters( 'ep_content_connect_related_posts', $related_posts, $all_posts );
 
 		return $related_posts;
 	}
