@@ -89,13 +89,16 @@ class Mapping {
 
 		foreach ( $relationships as $relationship ) {
 
-			if ( empty( $relationship->to ) ) {
+			if ( empty( $relationship->from ) || empty( $relationship->to ) ) {
 				continue;
 			}
 
-			$target_types = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
+			$from_post_types = is_array( $relationship->from ) ? $relationship->from : [ $relationship->from ];
+			$to_post_types   = is_array( $relationship->to ) ? $relationship->to : [ $relationship->to ];
 
-			foreach ( $target_types as $post_type ) {
+			$relationship_post_types = array_merge( $from_post_types, $to_post_types );
+
+			foreach ( $relationship_post_types as $post_type ) {
 				$fields[] = $this->helper->get_field_name( $relationship->name, $post_type );
 			}
 		}
