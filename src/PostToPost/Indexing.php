@@ -36,6 +36,7 @@ class Indexing {
 		add_filter( 'ep_post_sync_args', [ $this, 'index_relationships' ], 10, 2 );
 		add_action( 'tenup-content-connect-add-relationship', [ $this, 'index_relationship' ], 10, 4 );
 		add_action( 'tenup-content-connect-delete-relationship', [ $this, 'deindex_relationship' ], 10, 4 );
+		add_action( 'before_delete_post', [ $this, 'deindex_post_relationships' ] );
 	}
 
 	/**
@@ -122,6 +123,39 @@ class Indexing {
 		}
 
 		$this->execute_bulk_update( $relationship_data, 'remove' );
+	}
+
+	/**
+	 * Removes a permanently deleted post from every partner's Elasticsearch document.
+	 *
+	 * Content Connect deletes the junction rows for a post on permanent deletion
+	 * without firing its delete-relationship action, which would otherwise leave
+	 * stale entries in the ES documents of related posts. This runs while the
+	 * junction rows still exist, so every related post can be found and cleaned up.
+	 *
+	 * @param  int $post_id ID of the post being permanently deleted.
+	 * @return void
+	 */
+	public function deindex_post_relationships( $post_id ) {
+
+		$relationships = $this->helper->get_relationships();
+
+		if ( empty( $relationships ) ) {
+			return;
+		}
+
+		foreach ( $relationships as $relationship ) {
+
+			$related_ids = $relationship->get_related_object_ids( $post_id );
+
+			if ( empty( $related_ids ) ) {
+				continue;
+			}
+
+			foreach ( $related_ids as $related_id ) {
+				$this->deindex_relationship( $post_id, (int) $related_id, $relationship->name, 'post-to-post' );
+			}
+		}
 	}
 
 	/**
