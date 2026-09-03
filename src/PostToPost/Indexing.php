@@ -277,7 +277,7 @@ class Indexing {
 	 *
 	 * @param  array  $relationship_data The relationship data to update.
 	 * @param  string $operation         The operation type ('add' or 'remove').
-	 * @return \WP_Error|array The response or WP_Error on failure.
+	 * @return \WP_Error|array|false The response, WP_Error on invalid input, or false on request failure.
 	 */
 	private function execute_bulk_update( $relationship_data, $operation ) {
 
@@ -293,7 +293,10 @@ class Indexing {
 
 			$bulk_body .= wp_json_encode(
 				[
-					'update' => [ '_id' => $post_id ],
+					'update' => [
+						'_id'               => $post_id,
+						'retry_on_conflict' => 3,
+					],
 				]
 			) . "\n";
 
@@ -318,6 +321,28 @@ class Indexing {
 		];
 
 		$response = Elasticsearch::factory()->remote_request( $path, $args );
+
+		if ( is_wp_error( $response ) ) {
+			error_log( '[EPContentConnect] Bulk relationship update request failed: ' . $response->get_error_message() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+
+			return false;
+		}
+
+		$status_code = (int) wp_remote_retrieve_response_code( $response );
+
+		if ( $status_code < 200 || $status_code >= 300 ) {
+			error_log( '[EPContentConnect] Bulk relationship update failed with unexpected HTTP status ' . $status_code ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+
+			return false;
+		}
+
+		$response_body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+		if ( ! empty( $response_body['errors'] ) ) {
+			error_log( '[EPContentConnect] Bulk relationship update completed with item errors: ' . wp_json_encode( $response_body['items'] ?? $response_body ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+
+			return false;
+		}
 
 		return $response;
 	}
