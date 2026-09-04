@@ -5,7 +5,7 @@
  * Plugin URI:        https://github.com/s3rgiosan/elasticpress-content-connect
  * Requires at least: 6.7
  * Requires PHP:      7.4
- * Version:           0.1.0
+ * Version:           1.0.1
  * Author:            10up
  * Author URI:        https://10up.com
  * License:           GPL v2 or later
