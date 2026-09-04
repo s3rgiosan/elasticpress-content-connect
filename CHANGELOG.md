@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file, per [the Keep a Changelog standard](http://keepachangelog.com/).
 
+## 1.0.2 - 2026-09-04
+
+### Added
+
+- Expanded unit coverage for bulk update result handling, numeric array filter values, relationship helper fallbacks, batched partner cleanup on deletion, and multiple relationship filters on a single post type.
+- A GitHub Actions workflow that runs the unit suite on a PHP 7.4, 8.2, and 8.3 matrix.
+- An opt-in Elasticsearch integration test suite with an end-to-end relationship filtering test, kept separate from the unit suite.
+
 ## 1.0.1 - 2026-09-04
 
 ### Added
