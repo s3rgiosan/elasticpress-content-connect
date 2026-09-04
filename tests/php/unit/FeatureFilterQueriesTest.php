@@ -281,4 +281,45 @@ class FeatureFilterQueriesTest extends WP_UnitTestCase {
 
 		$this->assertSame( $group, $bool['must'] );
 	}
+
+	public function test_multiple_relationship_filters_on_one_post_type_are_anded_under_must(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		// The production use case: a single post type (e.g. a person archive)
+		// filtered by several distinct relationships at once (service, office,
+		// role). get_active_filters() produces one entry per active relationship.
+		$active_filters = [
+			'person_to_service' => [ 'service' => 'alpha' ],
+			'person_to_office'  => [ 'office' => 'beta' ],
+			'person_to_role'    => [ 'role' => 'gamma' ],
+		];
+
+		$group = $this->build_filter_queries( $feature, $active_filters, $wp_query );
+
+		// One nested query per relationship field, each on its own path.
+		$this->assertCount( 3, $group, 'Each active relationship should build its own nested query.' );
+
+		$paths = [];
+		foreach ( $group as $query ) {
+			$this->assertArrayHasKey( 'nested', $query );
+			$paths[] = $query['nested']['path'];
+		}
+		sort( $paths );
+		$this->assertSame( [ 'person_to_office', 'person_to_role', 'person_to_service' ], $paths );
+
+		$formatted_args = $this->add_filters_to_query( $feature, [], [ $group ], $wp_query );
+
+		$bool = $formatted_args['post_filter']['bool'];
+
+		// Different relationships must be AND-combined: a document has to satisfy
+		// every relationship filter, so they sit under `must`, never `should`.
+		$this->assertArrayHasKey( 'must', $bool );
+		$this->assertArrayNotHasKey( 'should', $bool );
+		$this->assertArrayNotHasKey( 'minimum_should_match', $bool );
+
+		$this->assertCount( 3, $bool['must'] );
+		$this->assertSame( $group, $bool['must'] );
+	}
 }
