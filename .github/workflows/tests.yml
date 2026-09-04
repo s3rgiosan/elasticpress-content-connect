@@ -38,7 +38,7 @@ jobs:
           {
             "phpVersion": "${{ matrix.php }}",
             "plugins": [
-              "10up/ElasticPress",
+              "https://downloads.wordpress.org/plugin/elasticpress.5.3.3.zip",
               "10up/wp-content-connect#develop",
               "."
             ]
