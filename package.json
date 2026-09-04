@@ -4,7 +4,8 @@
 	"scripts": {
 		"wp-env": "wp-env",
 		"test:setup": "wp-env start",
-		"test:unit": "wp-env run tests-cli --env-cwd='wp-content/plugins/elasticpress-content-connect' vendor/bin/phpunit --testsuite=default"
+		"test:unit": "wp-env run tests-cli --env-cwd='wp-content/plugins/elasticpress-content-connect' vendor/bin/phpunit --testsuite=unit",
+		"test:integration": "wp-env run tests-cli --env-cwd='wp-content/plugins/elasticpress-content-connect' bash -c \"EP_HOST=${EP_HOST:-http://host.docker.internal:8890} vendor/bin/phpunit --testsuite=integration\""
 	},
 	"devDependencies": {
 		"@wordpress/env": "^10.0.0"
