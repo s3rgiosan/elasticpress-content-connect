@@ -206,7 +206,11 @@ class Indexing {
 		 */
 		$query_args = apply_filters( 'ep_content_connect_related_posts_query_args', $query_args, $post_id, $relationship_name );
 
-		$page_size = (int) ( $query_args['posts_per_page'] ?? 100 );
+		if ( ! isset( $query_args['posts_per_page'] ) ) {
+			$query_args['posts_per_page'] = 100;
+		}
+
+		$page_size = (int) $query_args['posts_per_page'];
 
 		$all_posts = [];
 		$paged     = 1;
