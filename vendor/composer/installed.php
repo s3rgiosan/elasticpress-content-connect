@@ -3,7 +3,7 @@
         'name' => 's3rgiosan/elasticpress-content-connect',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '2c9fc130c5cdaa28114dec5d7996140f4e1af8ed',
+        'reference' => 'cc89975099fd53cb0ec28bdb05fa767dec94469e',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         's3rgiosan/elasticpress-content-connect' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '2c9fc130c5cdaa28114dec5d7996140f4e1af8ed',
+            'reference' => 'cc89975099fd53cb0ec28bdb05fa767dec94469e',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
