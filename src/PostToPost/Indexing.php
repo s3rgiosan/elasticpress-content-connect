@@ -212,8 +212,8 @@ class Indexing {
 
 		$page_size = (int) $query_args['posts_per_page'];
 
-		$all_posts = [];
-		$paged     = 1;
+		$pages = [];
+		$paged = 1;
 
 		do {
 			$page_args          = $query_args;
@@ -222,13 +222,15 @@ class Indexing {
 			$query = new \WP_Query( $page_args );
 			$posts = $query->get_posts();
 
-			$all_posts = array_merge( $all_posts, $posts );
+			$pages[] = $posts;
 
 			$posts_count = count( $posts );
 
 			++$paged;
 
 		} while ( -1 !== $page_size && $posts_count === $page_size );
+
+		$all_posts = empty( $pages ) ? [] : array_merge( ...$pages );
 
 		$related_posts = [];
 
