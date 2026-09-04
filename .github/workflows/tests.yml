@@ -1,0 +1,55 @@
+name: PHPUnit
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['7.4', '8.2', '8.3']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      # The committed .wp-env.json points ElasticPress at a local sibling path
+      # (../elasticpress) that does not exist in CI, and pins a single PHP
+      # version. Override both here: pull ElasticPress and Content Connect from
+      # GitHub, and set the PHP version from the matrix. A live Elasticsearch
+      # server is not required because the test suite stubs the HTTP layer.
+      - name: Configure wp-env for CI
+        run: |
+          cat > .wp-env.override.json <<JSON
+          {
+            "phpVersion": "${{ matrix.php }}",
+            "plugins": [
+              "10up/ElasticPress",
+              "10up/wp-content-connect#develop",
+              "."
+            ]
+          }
+          JSON
+
+      - name: Start wp-env
+        run: npx wp-env start
+
+      - name: Install Composer dev dependencies in the container
+        run: npx wp-env run tests-cli --env-cwd='wp-content/plugins/elasticpress-content-connect' composer install --no-interaction --no-progress
+
+      - name: Run PHPUnit
+        run: npm run test:unit
