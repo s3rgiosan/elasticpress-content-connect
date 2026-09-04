@@ -180,6 +180,50 @@ class FeatureFilterQueriesTest extends WP_UnitTestCase {
 		$this->assertContains( 'related_content.post_title.raw', $term_field_names );
 	}
 
+	public function test_numeric_array_filter_value_builds_post_id_term_clauses(): void {
+
+		$feature  = $this->make_feature();
+		$wp_query = new WP_Query();
+
+		// Shape matches Feature::get_active_filters() for `?filter[]=1&filter[]=2`:
+		// an array of numeric strings for one relationship post type.
+		$active_filters = [
+			'related_content' => [
+				'page' => [ '1', '2' ],
+			],
+		];
+
+		$filter_queries = $this->build_filter_queries( $feature, $active_filters, $wp_query );
+
+		$violations = [];
+		$this->collect_array_valued_term_clauses( $filter_queries, $violations );
+		$this->assertSame( [], $violations, 'A numeric array filter value must not produce a term clause with an array value.' );
+
+		$should_clauses = $filter_queries[0]['nested']['query']['bool']['should'];
+
+		// Each numeric value expands to exactly one post_id term with an int value.
+		$post_id_terms = [];
+		foreach ( $should_clauses as $clause ) {
+			if ( isset( $clause['term']['related_content.post_id'] ) ) {
+				$post_id_terms[] = $clause['term']['related_content.post_id'];
+			}
+		}
+		sort( $post_id_terms );
+		$this->assertSame( [ 1, 2 ], $post_id_terms, 'Numeric array values must expand to one int post_id term each.' );
+
+		// Numeric values must NOT produce post_name / post_title clauses.
+		$field_names = [];
+		foreach ( $should_clauses as $clause ) {
+			foreach ( [ 'term', 'match' ] as $type ) {
+				if ( isset( $clause[ $type ] ) ) {
+					$field_names = array_merge( $field_names, array_keys( $clause[ $type ] ) );
+				}
+			}
+		}
+		$this->assertNotContains( 'related_content.post_name', $field_names );
+		$this->assertNotContains( 'related_content.post_title.raw', $field_names );
+	}
+
 	public function test_multiple_post_type_groups_are_ored_under_should_with_minimum_should_match(): void {
 
 		$feature  = $this->make_feature();
