@@ -58,6 +58,10 @@ class IndexingRelationshipsTest extends WP_UnitTestCase {
 	 * @inheritDoc
 	 */
 	public function set_up(): void {
+		if ( ! function_exists( 'TenUp\ContentConnect\Helpers\get_registry' ) ) {
+			$this->markTestSkipped( 'Content Connect is not available.' );
+		}
+
 		parent::set_up();
 
 		register_post_type(
