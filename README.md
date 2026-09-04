@@ -16,7 +16,7 @@ Filter by Content Connect post-to-post relationships.
 ## Requirements
 
 * PHP 7.4+
-* WordPress 6.5
+* WordPress 6.7
 * [ElasticPress](https://elasticpress.io/)
 * [Content Connect](https://github.com/10up/wp-content-connect/)
 * Elasticsearch per [ElasticPress requirements](https://github.com/10up/ElasticPress#requirements)
@@ -133,7 +133,7 @@ The plugin automatically creates nested field mappings:
 
 ```php
 add_filter( 'ep_content_connect_post_to_post_relationships_field_mapping', function( $mapping ) {
-    $field_mapping['properties']['custom_field'] = [ 'type' => 'keyword' ];
+    $mapping['properties']['custom_field'] = [ 'type' => 'keyword' ];
     return $mapping;
 } );
 ```
@@ -144,21 +144,58 @@ add_filter( 'ep_content_connect_post_to_post_relationships_field_mapping', funct
 
 **Relationship Data:**
 
-* `ep_content_connect_post_to_post_relationships` - Modify available relationships
-* `ep_content_connect_related_post_types` - Modify related post types
-* `ep_content_connect_field_name` - Customize field names
-* `ep_content_connect_field_value` - Customize field values
+* `ep_content_connect_post_to_post_relationships` - Modify the available relationships
+* `ep_content_connect_related_post_types` - Modify the related post types for a post type
+* `ep_content_connect_field_name` - Customize a relationship's Elasticsearch field name
+* `ep_content_connect_field_value` - Customize the indexed value for a related post
+
+**Indexing:**
+
+* `ep_content_connect_post_to_post_relationships_field_mapping` - Customize the nested Elasticsearch field mapping
+* `ep_content_connect_post_to_post_relationship_fields` - Modify the set of relationship field names that get mapped
+* `ep_content_connect_post_to_post_relationship_data` - Modify a relationship's data before indexing
+* `ep_content_connect_related_posts` - Modify the related posts collected during indexing
 
 **Query Filtering:**
 
 * `ep_content_connect_is_filterable_page` - Control which pages support filtering
+* `ep_content_connect_post_to_post_relationship_supported_filters` - Modify the supported filters for a post type
+* `ep_content_connect_post_to_post_relationship_active_filters` - Modify the active filters read from the request
 * `ep_content_connect_post_to_post_relationship_filter_name` - Customize URL parameter names
 * `ep_content_connect_post_to_post_relationship_filter_value` - Sanitize filter values
-* `ep_content_connect_post_to_post_relationship_filter_queries` - Modify Elasticsearch queries
+* `ep_content_connect_post_to_post_relationship_filter_queries` - Modify the Elasticsearch filter queries
+* `ep_content_connect_post_to_post_relationship_filter_operator` - Set how one post type's filters combine (default `must`)
+* `ep_content_connect_post_to_post_relationship_minimum_should_match` - Set the minimum number of post-type groups that must match when combining multiple post types (default `1`)
 
 **Performance:**
 
 * `ep_content_connect_related_posts_query_args` - Optimize relationship queries
+
+## Development
+
+### Requirements
+
+* [Node.js](https://nodejs.org/) and [Docker](https://www.docker.com/) (for the `wp-env` test environment)
+* [Composer](https://getcomposer.org/)
+
+### Running Tests
+
+The test suite is split into two parts.
+
+**Unit tests** run against a mocked Elasticsearch transport and need no cluster:
+
+```bash
+npm run test:setup   # start the wp-env environment (first run only)
+npm run test:unit
+```
+
+**Integration tests** run against a real Elasticsearch cluster and are opt-in. Point `EP_HOST` at a reachable cluster and run:
+
+```bash
+EP_HOST=http://host.docker.internal:9200 npm run test:integration
+```
+
+Without a reachable `EP_HOST`, the integration suite skips itself, so the unit suite always runs on its own.
 
 ## Changelog
 
