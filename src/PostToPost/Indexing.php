@@ -152,9 +152,25 @@ class Indexing {
 				continue;
 			}
 
+			$relationship_data = [];
+
 			foreach ( $related_ids as $related_id ) {
-				$this->deindex_relationship( $post_id, (int) $related_id, $relationship->name, 'post-to-post' );
+				$related_id = (int) $related_id;
+
+				$pair_data = $this->prepare_relationship( $post_id, $related_id, $relationship->name );
+
+				if ( empty( $pair_data[ $related_id ] ) ) {
+					continue;
+				}
+
+				$relationship_data[ $related_id ] = $pair_data[ $related_id ];
 			}
+
+			if ( empty( $relationship_data ) ) {
+				continue;
+			}
+
+			$this->execute_bulk_update( $relationship_data, 'remove' );
 		}
 	}
 
